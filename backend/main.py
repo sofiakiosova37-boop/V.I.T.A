@@ -7,7 +7,7 @@ from typing import List
 
 from routers import registration
 import database as db
-from burnscoring import calculate
+from burnscoring import calculate_exhaustion
 from sleep_scoring import calculate_sleep
 from depressionscoring import calculate_depression
 
@@ -42,7 +42,7 @@ def submit(data: Submission):
         raise HTTPException(409, "The burnout test can only be taken once a week.")
     if len(data.answers) != 22 or any(not 0 <= a.value <= 6 for a in data.answers):
         raise HTTPException(400, "Incorrect answers")
-    result = calculate([a.dict() for a in data.answers])
+    result = calculate_exhaustion([a.dict() for a in data.answers])
     db.save_result(data.user_id, "burnout", {"sections": result})
     return {"sections": result}
 
