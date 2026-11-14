@@ -1,480 +1,347 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
-  AstronautProfile,
-  BloodAnalysisResponse,
-  BloodMetricsInput,
-  MissionOrbit,
-  TelemetryData,
+  TestSummary,
+  TrafficLightStatus,
+  WeeklyCheckupEntry,
 } from "../types/health";
 
 interface DashboardTabProps {
-  profile: AstronautProfile;
-  orbit: MissionOrbit;
-  onOrbitChange: (orbit: MissionOrbit) => void;
-  telemetry: TelemetryData;
-  onTelemetryChange: (t: TelemetryData) => void;
-  bloodInput: BloodMetricsInput;
-  onBloodInputChange: (b: BloodMetricsInput) => void;
-  bloodResult: BloodAnalysisResponse | null;
-  onRunBloodAnalysis: () => void;
-  isAnalyzing: boolean;
-  evaReadinessScore: number;
+  history: WeeklyCheckupEntry[];
+  onSaveCheckup: (entry: WeeklyCheckupEntry) => void;
+  testSummary: TestSummary;
+  onGoToTests: () => void;
 }
 
-const QUOTES = [
-  "«Земля — колиска розуму, але не можна вічно жити в колисці.» — К. Ціолковський",
-  "«Кожен оберт навколо планети — це новий світанок кожні 90 хвилин.»",
-  "«Дисципліна на орбіті — найкраща страховка для повернення додому.»",
-  "«Ти не просто спостерігаєш за зірками — ти працюєш серед них.»",
+const DAILY_QUOTES = [
+  "«Турбота про ментальне здоров’я — це не розкіш, а базова навичка виживання в сучасному ритмі.»",
+  "«Навіть 15 хвилин прогулянки без телефону знижують рівень кортизолу краще, ніж годинний скролінг стрічки.»",
+  "«Якісний сон сьогодні — це твоя концентрація, настрій та стійкість до стресу завтра.»",
+  "«Маленькі регулярні кроки завжди перемагають рідкісні героїчні ривки.»",
 ];
 
 export const DashboardTab: React.FC<DashboardTabProps> = ({
-  profile,
-  orbit,
-  onOrbitChange,
-  telemetry,
-  onTelemetryChange,
-  bloodInput,
-  onBloodInputChange,
-  bloodResult,
-  onRunBloodAnalysis,
-  isAnalyzing,
-  evaReadinessScore,
+  history,
+  onSaveCheckup,
+  testSummary,
+  onGoToTests,
 }) => {
-  const [now, setNow] = useState<Date>(new Date());
-  const [quoteIndex, setQuoteIndex] = useState<number>(0);
+  const latest = history[history.length - 1];
 
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+  // Поля для швидкого щотижневого чекапу
+  const [stressLevel, setStressLevel] = useState<number>(4); // 1-10 (де 10 — сильний стрес)
+  const [energyLevel, setEnergyLevel] = useState<number>(7); // 1-10
+  const [sleepHours, setSleepHours] = useState<number>(
+    latest?.sleepHours ?? 7.5,
+  );
+  const [sleepQuality, setSleepQuality] = useState<number>(
+    latest?.sleepQuality ?? 7,
+  );
+  const [quoteIdx, setQuoteIdx] = useState<number>(0);
 
-  const startMs = new Date(profile.missionStart).getTime();
-  const endMs = new Date(profile.missionEnd).getTime();
-  const elapsedDays = Math.max(
-    1,
-    Math.floor((now.getTime() - startMs) / (1000 * 60 * 60 * 24)),
-  );
-  const remainingDays = Math.max(
-    0,
-    Math.ceil((endMs - now.getTime()) / (1000 * 60 * 60 * 24)),
-  );
-  const progressPercent = Math.min(
-    100,
-    Math.max(
-      0,
-      Math.round(((now.getTime() - startMs) / (endMs - startMs)) * 100),
-    ),
-  );
-
-  // Швидкі пресети для демонстрації журі на хакатоні
-  const applyScenario = (
-    scenario: "nominal" | "co2_fatigue" | "critical_dehydration",
-  ) => {
-    if (scenario === "nominal") {
-      onTelemetryChange({
-        heartRate: 68,
-        spo2: 98,
-        co2Level: 1200,
-        radiationDose: 42.5,
-      });
-      onBloodInputChange({
-        ...bloodInput,
-        hemoglobin: 14.5,
-        white_blood_cells: 6.4,
-        hydration_level: 64.0,
-      });
-    } else if (scenario === "co2_fatigue") {
-      onTelemetryChange({
-        heartRate: 96,
-        spo2: 94,
-        co2Level: 4800,
-        radiationDose: 88.2,
-      });
-      onBloodInputChange({
-        ...bloodInput,
-        hemoglobin: 11.4,
-        white_blood_cells: 3.6,
-        hydration_level: 54.0,
-      });
-    } else {
-      onTelemetryChange({
-        heartRate: 124,
-        spo2: 91,
-        co2Level: 5300,
-        radiationDose: 112.0,
-      });
-      onBloodInputChange({
-        ...bloodInput,
-        hemoglobin: 11.1,
-        white_blood_cells: 12.8,
-        hydration_level: 44.5,
-      });
-    }
+  // Розрахунок індексу психологічного стану (0-100)
+  const calcPsychScore = () => {
+    const raw = (10 - stressLevel) * 5 + energyLevel * 5;
+    return Math.min(100, Math.max(0, raw));
   };
+
+  const evaluateTrafficLight = (
+    psych: number,
+    hours: number,
+    quality: number,
+  ): TrafficLightStatus => {
+    if (psych < 40 || hours < 5.5 || quality <= 3) return "red";
+    if (psych < 70 || hours < 7 || quality <= 6) return "yellow";
+    return "green";
+  };
+
+  const handleSubmitCheckup = (e: React.FormEvent) => {
+    e.preventDefault();
+    const psychScore = calcPsychScore();
+    const status = evaluateTrafficLight(psychScore, sleepHours, sleepQuality);
+
+    onSaveCheckup({
+      id: crypto.randomUUID(),
+      weekLabel: `Тиж. ${history.length + 1}`,
+      date: new Date().toLocaleDateString("uk-UA"),
+      psychScore,
+      sleepHours,
+      sleepQuality,
+      status,
+    });
+  };
+
+  const currentStatus: TrafficLightStatus = latest?.status ?? "green";
+
+  const getRecommendations = (status: TrafficLightStatus) => {
+    if (status === "red") {
+      return {
+        title: "Критичне виснаження — потрібен режим відновлення",
+        routine:
+          "Зменште вечірнє навантаження, відкладіть робочі/навчальні задачі після 20:00 та лягайте спати на 1 годину раніше.",
+        exercises:
+          "Дихальна практика 4-7-8 (5 хв) + легка розтяжка шиї та спини без інтенсивного кардіо.",
+        tip: "Рекомендуємо пройти детальний тест на вигорання та депресію у вкладці «Тести» і за потреби звернутися до фахівця.",
+      };
+    }
+    if (status === "yellow") {
+      return {
+        title: "Помірне накопичення втоми — потрібна корекція режиму",
+        routine:
+          "Фіксований час підйому, мінімум 30 хвилин денного світла в першій половині дня та відмова від екранів за 45 хв до сну.",
+        exercises:
+          "Швидка ходьба на свіжому повітрі (30 хв) або легка ранкова зарядка на 15 хвилин.",
+        tip: "Зверніть увагу на баланс сну: недосип понад 2 дні поспіль різко знижує швидкість реакції.",
+      };
+    }
+    return {
+      title: "Оптимальний баланс — чудовий стан",
+      routine:
+        "Підтримуйте поточний графік сну та робочих перерв (правило 50/10: 50 хв фокусу, 10 хв відпочинку).",
+      exercises:
+        "Планові силові або кардіо-тренування 3 рази на тиждень за вашим розкладом.",
+      tip: "Ваш ресурс у нормі — гарний час для складних інтелектуальних задач або навчання.",
+    };
+  };
+
+  const recs = getRecommendations(currentStatus);
 
   return (
     <div className="space-y-6">
-      {/* Верхній рядок: Лічильник місії + Індекс EVA + Режим орбіти */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* Таймер місії */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-5">
-          <div className="flex items-center justify-between text-xs uppercase tracking-wider text-slate-400">
-            <span>⏱ Хронометр місії</span>
-            <span className="text-cyan-400">{profile.missionName}</span>
+      {/* Верхній блок: Світлофор стану + Графік чекапу */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        {/* Світлофор (4 колонки) */}
+        <div className="flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-900/90 p-6 lg:col-span-4">
+          <div>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Статус тижня (Світлофор)
+            </span>
+            <h2 className="mt-1 text-lg font-bold text-white">
+              {currentStatus === "green" && "Зелений рівень: Норма"}
+              {currentStatus === "yellow" && "Жовтий рівень: Увага"}
+              {currentStatus === "red" && "Червоний рівень: Перевантаження"}
+            </h2>
           </div>
-          <div className="mt-3 flex items-baseline justify-between">
-            <div>
-              <p className="text-3xl font-bold text-white">
-                День {elapsedDays}
-              </p>
-              <p className="text-xs text-slate-400">від старту екіпажу</p>
-            </div>
-            <div className="text-right">
-              <p className="text-xl font-semibold text-cyan-300">
-                -{remainingDays} дн.
-              </p>
-              <p className="text-xs text-slate-400">до повернення</p>
-            </div>
-          </div>
-          <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-slate-800">
+
+          {/* Візуальний індикатор світлофора */}
+          <div className="my-5 flex items-center justify-center gap-5 rounded-2xl border border-slate-800 bg-slate-950 py-5">
             <div
-              className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all"
-              style={{ width: `${progressPercent}%` }}
+              className={`h-12 w-12 rounded-full transition-all ${
+                currentStatus === "red"
+                  ? "bg-red-500 shadow-[0_0_25px_#ef4444]"
+                  : "bg-red-950/40 opacity-35"
+              }`}
+              title="Критичний стан"
+            />
+            <div
+              className={`h-12 w-12 rounded-full transition-all ${
+                currentStatus === "yellow"
+                  ? "bg-amber-400 shadow-[0_0_25px_#fbbf24]"
+                  : "bg-amber-950/40 opacity-35"
+              }`}
+              title="Потрібна корекція"
+            />
+            <div
+              className={`h-12 w-12 rounded-full transition-all ${
+                currentStatus === "green"
+                  ? "bg-emerald-500 shadow-[0_0_25px_#10b981]"
+                  : "bg-emerald-950/40 opacity-35"
+              }`}
+              title="Норма"
             />
           </div>
-          <p className="mt-1.5 text-right font-mono text-xs text-slate-400">
-            UTC: {now.toUTCString().slice(17, 25)} ({progressPercent}% місії)
-          </p>
-        </div>
 
-        {/* Індекс готовності до EVA */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-5">
-          <span className="text-xs uppercase tracking-wider text-slate-400">
-            🧑‍🚀 Готовність до виходу (EVA Score)
-          </span>
-          <div className="mt-3 flex items-center gap-4">
-            <div
-              className={`flex h-16 w-16 items-center justify-center rounded-full border-4 text-xl font-extrabold ${
-                evaReadinessScore >= 75
-                  ? "border-emerald-500 text-emerald-400"
-                  : evaReadinessScore >= 50
-                    ? "border-amber-500 text-amber-400"
-                    : "border-red-500 text-red-400"
-              }`}
-            >
-              {evaReadinessScore}%
-            </div>
-            <div className="text-sm">
-              <p className="font-semibold text-white">
-                {evaReadinessScore >= 75
-                  ? "Дозвіл на EVA підтверджено"
-                  : evaReadinessScore >= 50
-                    ? "Обмежений допуск (потрібен відпочинок)"
-                    : "Вихід у відкритий космос ЗАБОРОНЕНО"}
-              </p>
-              <p className="mt-1 text-xs text-slate-400">
-                Розраховано з біометрії, сну, реакції та психотесту
-              </p>
-            </div>
+          <div className="flex items-center justify-between text-xs text-slate-400">
+            <span>Психо-індекс: {latest?.psychScore ?? 75}%</span>
+            <span>Сон: {latest?.sleepHours ?? 7.5} год</span>
           </div>
         </div>
 
-        {/* Перемикач орбіти / затримки зв'язку */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-5">
-          <span className="text-xs uppercase tracking-wider text-slate-400">
-            🛰 Дистанція та затримка зв&apos;язку
-          </span>
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            {(["LEO", "MOON", "MARS"] as MissionOrbit[]).map((mode) => (
-              <button
-                key={mode}
-                onClick={() => onOrbitChange(mode)}
-                className={`rounded-lg py-2 text-xs font-bold transition ${
-                  orbit === mode
-                    ? "bg-cyan-600 text-white shadow-md shadow-cyan-500/20"
-                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
-                }`}
-              >
-                {mode === "LEO"
-                  ? "МКС (LEO)"
-                  : mode === "MOON"
-                    ? "Місяць"
-                    : "Марс"}
-              </button>
+        {/* Графік: Лише сон за період часу (8 колонок) */}
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-6 lg:col-span-8">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 className="text-base font-bold text-white">
+                📊 Динаміка сну за період часу
+              </h3>
+              <p className="text-xs text-slate-400">
+                Якість сну (%) та середня тривалість (год) по тижнях
+              </p>
+            </div>
+            <div className="flex items-center gap-4 text-xs">
+              <span className="flex items-center gap-1.5 text-teal-400">
+                <span className="h-2.5 w-2.5 rounded-sm bg-teal-400" /> Якість
+                сну (%)
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-5 flex h-44 items-end justify-between gap-4 rounded-xl border border-slate-800 bg-slate-950 px-5 pt-6 pb-3">
+            {history.map((item) => (
+              <div key={item.id} className="flex flex-1 flex-col items-center">
+                <span className="mb-1 text-[11px] font-semibold text-teal-300">
+                  {item.sleepQuality * 10}%
+                </span>
+                <div className="flex h-24 w-full items-end justify-center">
+                  <div
+                    style={{ height: `${item.sleepQuality * 10}%` }}
+                    className="w-8 rounded-t-md bg-teal-400 transition-all hover:bg-teal-300"
+                    title={`Сон: ${item.sleepQuality}/10 (${item.sleepHours} год)`}
+                  />
+                </div>
+                <span className="mt-2 text-xs font-medium text-slate-300">
+                  {item.weekLabel}
+                </span>
+                <span className="text-[10px] text-slate-500">
+                  {item.sleepHours}г
+                </span>
+              </div>
             ))}
           </div>
-          <p className="mt-3 text-xs text-slate-300">
-            {orbit === "LEO" &&
-              "Затримка сигналу: ~0.2 с. Постійний контакт із ЦУП."}
-            {orbit === "MOON" &&
-              "Затримка сигналу: ~2.6 с. Доступна напівавтономна діагностика."}
-            {orbit === "MARS" &&
-              "Затримка сигналу: 14 хв 20 с. Екіпаж покладається на бортовий ШІ."}
-          </p>
         </div>
       </div>
 
-      {/* Панель сценаріїв для демо */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cyan-900/50 bg-cyan-950/20 p-4">
-        <div className="text-sm">
-          <span className="font-semibold text-cyan-300">
-            🎛 Симулятор стану екіпажу (Demo):
-          </span>{" "}
-          <span className="text-slate-400">
-            миттєва зміна показників датчиків та аналізу крові
-          </span>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => applyScenario("nominal")}
-            className="rounded-lg bg-emerald-600/20 px-3 py-1.5 text-xs font-medium text-emerald-300 border border-emerald-500/40 hover:bg-emerald-600/30"
-          >
-            Штатна норма
-          </button>
-          <button
-            onClick={() => applyScenario("co2_fatigue")}
-            className="rounded-lg bg-amber-600/20 px-3 py-1.5 text-xs font-medium text-amber-300 border border-amber-500/40 hover:bg-amber-600/30"
-          >
-            Високий CO₂ + анемія
-          </button>
-          <button
-            onClick={() => applyScenario("critical_dehydration")}
-            className="rounded-lg bg-red-600/20 px-3 py-1.5 text-xs font-medium text-red-300 border border-red-500/40 hover:bg-red-600/30"
-          >
-            Критична дегідратація (SOS)
-          </button>
-        </div>
-      </div>
-
-      {/* Симулятор бортової телеметрії + Аналізатор крові (FastAPI) */}
+      {/* Середній блок: Форма нового щотижневого чекапу + Персональні рекомендації */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Ліва колонка: Живі датчики скафандра/станції */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-5">
+        {/* Форма чекапу */}
+        <form
+          onSubmit={handleSubmitCheckup}
+          className="rounded-2xl border border-slate-800 bg-slate-900/90 p-6 space-y-4"
+        >
           <h3 className="text-base font-bold text-white">
-            💓 Бортова телеметрія та середовище
+            🗓 Пройти щотижневий чекап
           </h3>
-          <div className="mt-4 grid grid-cols-2 gap-4">
-            <div className="rounded-lg bg-slate-950 p-3">
-              <label className="text-xs text-slate-400">Пульс (уд/хв)</label>
-              <p className="text-2xl font-bold text-rose-400">
-                {telemetry.heartRate}
-              </p>
-              <input
-                type="range"
-                min={45}
-                max={160}
-                value={telemetry.heartRate}
-                onChange={(e) =>
-                  onTelemetryChange({
-                    ...telemetry,
-                    heartRate: Number(e.target.value),
-                  })
-                }
-                className="mt-2 w-full accent-rose-500"
-              />
-            </div>
 
-            <div className="rounded-lg bg-slate-950 p-3">
-              <label className="text-xs text-slate-400">
-                Сатурація SpO₂ (%)
-              </label>
-              <p className="text-2xl font-bold text-sky-400">
-                {telemetry.spo2}%
-              </p>
-              <input
-                type="range"
-                min={85}
-                max={100}
-                value={telemetry.spo2}
-                onChange={(e) =>
-                  onTelemetryChange({
-                    ...telemetry,
-                    spo2: Number(e.target.value),
-                  })
-                }
-                className="mt-2 w-full accent-sky-500"
-              />
+          <div>
+            <div className="flex justify-between text-xs text-slate-300">
+              <span>Рівень стресу та напруги за тиждень (1–10)</span>
+              <span className="font-bold text-indigo-400">
+                {stressLevel} / 10
+              </span>
             </div>
-
-            <div className="rounded-lg bg-slate-950 p-3">
-              <label className="text-xs text-slate-400">
-                Рівень CO₂ у відсіку (ppm)
-              </label>
-              <p
-                className={`text-2xl font-bold ${
-                  telemetry.co2Level > 4000
-                    ? "text-amber-400"
-                    : "text-emerald-400"
-                }`}
-              >
-                {telemetry.co2Level}
-              </p>
-              <input
-                type="range"
-                min={400}
-                max={6000}
-                step={100}
-                value={telemetry.co2Level}
-                onChange={(e) =>
-                  onTelemetryChange({
-                    ...telemetry,
-                    co2Level: Number(e.target.value),
-                  })
-                }
-                className="mt-2 w-full accent-amber-500"
-              />
-            </div>
-
-            <div className="rounded-lg bg-slate-950 p-3">
-              <label className="text-xs text-slate-400">
-                Накопичена радіація (мЗв)
-              </label>
-              <p className="text-2xl font-bold text-purple-400">
-                {telemetry.radiationDose}
-              </p>
-              <input
-                type="range"
-                min={0}
-                max={250}
-                step={0.5}
-                value={telemetry.radiationDose}
-                onChange={(e) =>
-                  onTelemetryChange({
-                    ...telemetry,
-                    radiationDose: Number(e.target.value),
-                  })
-                }
-                className="mt-2 w-full accent-purple-500"
-              />
-            </div>
+            <input
+              type="range"
+              min={1}
+              max={10}
+              value={stressLevel}
+              onChange={(e) => setStressLevel(Number(e.target.value))}
+              className="mt-1.5 w-full accent-indigo-500"
+            />
           </div>
 
-          <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950/70 p-3 text-xs text-slate-300">
-            <span className="font-semibold text-cyan-400">
-              💡 Порада бортового асистента:{" "}
-            </span>
-            {telemetry.co2Level > 4000
-              ? "Підвищений рівень CO₂ знижує когнітивну точність. Перевірте скрубери вуглекислого газу."
-              : telemetry.heartRate > 105
-                ? "Зафіксовано тахікардію у стані спокою. Виконайте 3 хвилини квадратного дихання."
-                : "Фізіологічні параметри та газова суміш відсіку стабільні."}
-          </div>
-        </div>
-
-        {/* Права колонка: Біомаркери крові -> FastAPI /api/v1/analyze/blood */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-5">
-          <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-white">
-              🩸 Аналізатор біомаркерів крові
-            </h3>
-            <span className="rounded bg-slate-800 px-2 py-0.5 font-mono text-[11px] text-cyan-400">
-              POST /api/v1/analyze/blood
-            </span>
+          <div>
+            <div className="flex justify-between text-xs text-slate-300">
+              <span>Рівень енергії та мотивації (1–10)</span>
+              <span className="font-bold text-indigo-400">
+                {energyLevel} / 10
+              </span>
+            </div>
+            <input
+              type="range"
+              min={1}
+              max={10}
+              value={energyLevel}
+              onChange={(e) => setEnergyLevel(Number(e.target.value))}
+              className="mt-1.5 w-full accent-indigo-500"
+            />
           </div>
 
-          <div className="mt-4 grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-slate-400">
-                Гемоглобін (г/дл)
-              </label>
-              <input
-                type="number"
-                step="0.1"
-                value={bloodInput.hemoglobin}
-                onChange={(e) =>
-                  onBloodInputChange({
-                    ...bloodInput,
-                    hemoglobin: Number(e.target.value),
-                  })
-                }
-                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs text-slate-400">
-                Лейкоцити (тис/мкл)
-              </label>
-              <input
-                type="number"
-                step="0.1"
-                value={bloodInput.white_blood_cells}
-                onChange={(e) =>
-                  onBloodInputChange({
-                    ...bloodInput,
-                    white_blood_cells: Number(e.target.value),
-                  })
-                }
-                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs text-slate-400">
-                Гідратація (%)
+                Середній сон (год/добу)
               </label>
               <input
                 type="number"
                 step="0.5"
-                value={bloodInput.hydration_level}
-                onChange={(e) =>
-                  onBloodInputChange({
-                    ...bloodInput,
-                    hydration_level: Number(e.target.value),
-                  })
-                }
+                min={3}
+                max={12}
+                value={sleepHours}
+                onChange={(e) => setSleepHours(Number(e.target.value))}
+                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-400">
+                Якість сну (1–10)
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={10}
+                value={sleepQuality}
+                onChange={(e) => setSleepQuality(Number(e.target.value))}
                 className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
               />
             </div>
           </div>
 
           <button
-            onClick={onRunBloodAnalysis}
-            disabled={isAnalyzing}
-            className="mt-4 w-full rounded-lg bg-cyan-600 py-2 text-sm font-semibold text-white hover:bg-cyan-500 disabled:opacity-50"
+            type="submit"
+            className="w-full rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 transition"
           >
-            {isAnalyzing ? "Аналіз зразка..." : "Надіслати на аналіз (FastAPI)"}
+            Оновити світлофор та зберегти тиждень
           </button>
+        </form>
 
-          {bloodResult && (
-            <div
-              className={`mt-4 rounded-lg border p-3 text-xs ${
-                bloodResult.status === "red"
-                  ? "border-red-500/50 bg-red-950/40 text-red-200"
-                  : bloodResult.status === "yellow"
-                    ? "border-amber-500/50 bg-amber-950/40 text-amber-200"
-                    : "border-emerald-500/50 bg-emerald-950/40 text-emerald-200"
-              }`}
-            >
-              <div className="flex items-center justify-between font-bold">
-                <span>Вердикт системи: {bloodResult.status.toUpperCase()}</span>
-                <span className="font-mono text-[10px] opacity-75">
-                  [
-                  {bloodResult.source === "backend-api"
-                    ? "FastAPI Live"
-                    : "Offline Engine"}
-                  ]
-                </span>
-              </div>
-              <ul className="mt-2 list-disc space-y-1 pl-4">
-                {bloodResult.identified_risks.map((risk, index) => (
-                  <li key={index}>{risk}</li>
-                ))}
-              </ul>
+        {/* Рекомендації за результатом */}
+        <div className="flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-900/90 p-6">
+          <div>
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-white">
+                💡 Рекомендації за результатом
+              </h3>
+              <button
+                onClick={onGoToTests}
+                className="text-xs font-medium text-indigo-400 hover:underline"
+              >
+                Поглиблені тести →
+              </button>
             </div>
+            <p className="mt-2 text-sm font-semibold text-teal-300">
+              {recs.title}
+            </p>
+
+            <div className="mt-4 space-y-3 text-xs text-slate-300">
+              <div className="rounded-xl bg-slate-950 p-3">
+                <span className="font-bold text-white">⏰ Режим дня: </span>
+                {recs.routine}
+              </div>
+              <div className="rounded-xl bg-slate-950 p-3">
+                <span className="font-bold text-white">🏃 Вправи: </span>
+                {recs.exercises}
+              </div>
+              <div className="rounded-xl bg-slate-950 p-3">
+                <span className="font-bold text-white">🧭 Порада: </span>
+                {recs.tip}
+              </div>
+            </div>
+          </div>
+
+          {testSummary.reactionMs && (
+            <p className="mt-3 text-[11px] text-slate-400">
+              Останній тест реакції:{" "}
+              <strong className="text-white">
+                {testSummary.reactionMs} мс
+              </strong>
+              {testSummary.burnoutPercent !== undefined &&
+                ` • Індекс вигорання: ${testSummary.burnoutPercent}%`}
+            </p>
           )}
         </div>
       </div>
 
-      {/* Бонус: Мотиваційна цитата на головній сторінці */}
-      <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/50 px-5 py-3">
-        <p className="text-sm italic text-slate-300">{QUOTES[quoteIndex]}</p>
+      {/* Цитата дня */}
+      <div className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-900/60 px-5 py-3.5">
+        <p className="text-sm italic text-slate-300">
+          {DAILY_QUOTES[quoteIdx]}
+        </p>
         <button
-          onClick={() => setQuoteIndex((prev) => (prev + 1) % QUOTES.length)}
-          className="ml-4 shrink-0 text-xs text-cyan-400 hover:underline"
+          onClick={() =>
+            setQuoteIdx((prev) => (prev + 1) % DAILY_QUOTES.length)
+          }
+          className="ml-4 shrink-0 text-xs font-medium text-indigo-400 hover:underline"
         >
-          Наступна цитата →
+          Інша цитата →
         </button>
       </div>
     </div>

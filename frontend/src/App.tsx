@@ -1,328 +1,312 @@
-import React, { useMemo, useState } from "react";
-import { BioSensorsTab } from "./components/BioSensorsTab";
+import React, { useState } from "react";
 import { DashboardTab } from "./components/DashboardTab";
-import { EmergencyBanner } from "./components/EmergencyBanner";
-import { PhysicalSleepTab } from "./components/PhysicalSleepTab";
-import { PsychAndLogTab } from "./components/PsychAndLogTab";
-import { analyzeBloodBiomarkers } from "./services/api";
+import { HistoryAndScheduleTab } from "./components/HistoryAndScheduleTab";
+import { TestsTab } from "./components/tests/TestsTab";
+import { VitaLogo } from "./components/VitaLogo";
 import {
-  AlertStatus,
-  AstronautProfile,
-  BloodAnalysisResponse,
-  BloodMetricsInput,
-  LogEntry,
-  MissionOrbit,
-  PsychTestResult,
-  SansEyeResult,
-  SleepRecord,
-  TelemetryData,
+  ExerciseItem,
+  TestSummary,
+  UserProfile,
+  WeeklyCheckupEntry,
 } from "./types/health";
 
-type ActiveTab = "dashboard" | "psych" | "sensors" | "physical" | "profile";
+type Tab = "dashboard" | "tests" | "history" | "profile";
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>("dashboard");
-  const [orbit, setOrbit] = useState<MissionOrbit>("LEO");
-  const [dismissedAlerts, setDismissedAlerts] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<Tab>("dashboard");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
-  // Профіль астронавта (з редагуванням)
-  const [profile, setProfile] = useState<AstronautProfile>({
-    id: "AST-04-UA",
-    name: "Анастасія Зотова",
-    role: "Бортінженер / Спеціаліст місії",
-    missionName: "ARTEMIS-HORIZON IV",
-    missionStart: "2026-09-15T08:00:00Z",
-    missionEnd: "2027-03-15T08:00:00Z",
-    bloodType: "A(II) Rh+",
-    baselineHR: 66,
+  const [profile, setProfile] = useState<UserProfile>({
+    name: "Анастасія",
+    age: 19,
+    goal: "Збалансувати навчання, сон та знизити рівень стресу",
+    wakeUpTime: "07:30",
+    bedTime: "23:30",
   });
 
-  // Бортова телеметрія
-  const [telemetry, setTelemetry] = useState<TelemetryData>({
-    heartRate: 70,
-    spo2: 98,
-    co2Level: 1200,
-    radiationDose: 42.5,
-  });
-
-  // Біомаркери крові (для вашого FastAPI)
-  const [bloodInput, setBloodInput] = useState<BloodMetricsInput>({
-    astronaut_id: profile.id,
-    hemoglobin: 14.2,
-    white_blood_cells: 6.5,
-    hydration_level: 63.0,
-    notes: "Плановий забір перед EVA",
-  });
-  const [bloodResult, setBloodResult] = useState<BloodAnalysisResponse | null>(
-    null,
-  );
-  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
-
-  // Психологія, щоденник, сон, сенсори
-  const [psychResult, setPsychResult] = useState<PsychTestResult>({
-    date: "14.11.2026",
-    isolationScore: 20,
-    moodExhaustion: 25,
-    socialAggression: 15,
-    cognitiveLoad: 20,
-    totalPercent: 20,
-  });
-
-  const [logs, setLogs] = useState<LogEntry[]>([
+  const [history, setHistory] = useState<WeeklyCheckupEntry[]>([
     {
-      id: "1",
-      missionDay: 60,
-      timestamp: "08:40",
-      mood: "good",
-      text: "Завершили калібрування спектрометра. Сон був спокійним, самопочуття стабільне.",
+      id: "w1",
+      weekLabel: "Тиж. 1",
+      date: "25.10.2026",
+      psychScore: 62,
+      sleepHours: 6.5,
+      sleepQuality: 6,
+      status: "yellow",
+    },
+    {
+      id: "w2",
+      weekLabel: "Тиж. 2",
+      date: "01.11.2026",
+      psychScore: 74,
+      sleepHours: 7.5,
+      sleepQuality: 7,
+      status: "green",
+    },
+    {
+      id: "w3",
+      weekLabel: "Тиж. 3",
+      date: "08.11.2026",
+      psychScore: 80,
+      sleepHours: 8.0,
+      sleepQuality: 8,
+      status: "green",
     },
   ]);
 
-  const [sleepHistory, setSleepHistory] = useState<SleepRecord[]>([
-    { day: "Д-1", hours: 7.5, quality: 8 },
-    { day: "Д-2", hours: 6.0, quality: 6 },
-    { day: "Д-3", hours: 8.0, quality: 9 },
-    { day: "Д-4", hours: 6.5, quality: 7 },
-    { day: "Д-5", hours: 7.5, quality: 8 },
+  const [testSummary, setTestSummary] = useState<TestSummary>({
+    reactionMs: 255,
+  });
+
+  const [exercises, setExercises] = useState<ExerciseItem[]>([
+    {
+      id: "1",
+      day: "Понеділок",
+      title: "Розминка для спини та шиї після комп’ютера",
+      duration: "15 хв",
+      category: "Спина та постава",
+      completed: true,
+    },
+    {
+      id: "2",
+      day: "Середа",
+      title: "Швидка прогулянка на свіжому повітрі",
+      duration: "35 хв",
+      category: "Кардіо",
+      completed: false,
+    },
+    {
+      id: "3",
+      day: "П’ятниця",
+      title: "Дихальна релаксація та розтяжка перед сном",
+      duration: "20 хв",
+      category: "Релаксація",
+      completed: false,
+    },
+    {
+      id: "4",
+      day: "Неділя",
+      title: "Активне кардіо або біг у комфортному темпі",
+      duration: "40 хв",
+      category: "Кардіо",
+      completed: false,
+    },
   ]);
 
-  const [sansResult, setSansResult] = useState<SansEyeResult | null>(null);
-  const [lastReactionMs, setLastReactionMs] = useState<number | null>(245);
-
-  const handleRunBloodAnalysis = async () => {
-    setIsAnalyzing(true);
-    setDismissedAlerts(false);
-    const res = await analyzeBloodBiomarkers({
-      ...bloodInput,
-      astronaut_id: profile.id,
-    });
-    setBloodResult(res);
-    setIsAnalyzing(false);
-  };
-
-  // Автоматичне визначення екстрених сповіщень з усіх модулів
-  const { alertStatus, activeAlerts } = useMemo(() => {
-    const alerts: string[] = [];
-    let status: AlertStatus = "green";
-
-    if (bloodResult && bloodResult.status !== "green") {
-      alerts.push(...bloodResult.identified_risks);
-      status = bloodResult.status;
-    }
-    if (telemetry.heartRate > 115) {
-      alerts.push(
-        `Критичний пульс у стані спокою: ${telemetry.heartRate} уд/хв`,
-      );
-      status = "red";
-    }
-    if (telemetry.co2Level > 4500) {
-      alerts.push(
-        `Небезпечна концентрація CO₂ у житловому модулі: ${telemetry.co2Level} ppm`,
-      );
-      if (status !== "red") status = "yellow";
-    }
-    if (psychResult.totalPercent > 60) {
-      alerts.push(
-        `Критичний індекс психологічної ізоляції: ${psychResult.totalPercent}%`,
-      );
-      status = "red";
-    }
-
-    return { alertStatus: status, activeAlerts: alerts };
-  }, [bloodResult, telemetry, psychResult]);
-
-  // Розрахунок індексу готовності до EVA (0-100%)
-  const evaReadinessScore = useMemo(() => {
-    let score = 100;
-    if (telemetry.heartRate > 100) score -= 15;
-    if (telemetry.co2Level > 4000) score -= 10;
-    if (bloodResult?.status === "yellow") score -= 15;
-    if (bloodResult?.status === "red") score -= 35;
-    if (psychResult.totalPercent > 30) score -= 10;
-    if (psychResult.totalPercent > 60) score -= 25;
-    if (lastReactionMs && lastReactionMs > 350) score -= 10;
-    if (sansResult?.risk === "yellow") score -= 10;
-    return Math.max(0, Math.min(100, score));
-  }, [telemetry, bloodResult, psychResult, lastReactionMs, sansResult]);
+  const navItems: { id: Tab; icon: string; label: string }[] = [
+    { id: "dashboard", icon: "🚦", label: "Щотижневий чекап" },
+    { id: "tests", icon: "🧪", label: "Тести та реакція" },
+    { id: "history", icon: "📈", label: "Історія та вправи" },
+    { id: "profile", icon: "⚙️", label: "Профіль" },
+  ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
-      {/* Верхній навбар */}
-      <header className="border-b border-slate-800 bg-slate-900/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-600 font-bold text-white">
-              🚀
-            </div>
-            <div>
-              <h1 className="text-base font-bold tracking-wide text-white">
-                ASTRA-MED // Crew Health Monitor
-              </h1>
-              <p className="text-[11px] text-slate-400">
-                NASA Space Apps 2026 • Autonomous Crew Telemetry & HRP System
-              </p>
-            </div>
-          </div>
+    <div className="flex min-h-screen bg-[#070d19] text-slate-100 font-sans">
+      {/* Ліва бокова панель навігації */}
+      <aside
+        className={`sticky top-0 flex h-screen flex-col justify-between border-r border-slate-800/80 bg-[#0b1324] p-3 transition-all duration-300 ${
+          isSidebarCollapsed ? "w-[76px]" : "w-64"
+        }`}
+      >
+        <div>
+          {/* Логотип у верхньому лівому кутку — клік відкриває/закриває панель */}
+          <VitaLogo
+            collapsed={isSidebarCollapsed}
+            onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+          />
 
-          {/* Системні нагадування режиму дня */}
-          <div className="hidden items-center gap-4 text-xs text-slate-300 xl:flex">
-            <span className="rounded-full bg-slate-800 px-3 py-1">
-              💧 Гідратація: через 25 хв
-            </span>
-            <span className="rounded-full bg-slate-800 px-3 py-1">
-              🏋️ Тренування ARED: 17:00 UTC
-            </span>
-          </div>
+          <div className="my-3 border-t border-slate-800/80" />
+
+          {/* Пункти меню */}
+          <nav className="space-y-1.5">
+            {navItems.map((item) => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  title={isSidebarCollapsed ? item.label : undefined}
+                  className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition ${
+                    isActive
+                      ? "bg-teal-500/15 text-teal-300 ring-1 ring-teal-400/40"
+                      : "text-slate-400 hover:bg-slate-800/70 hover:text-slate-200"
+                  } ${isSidebarCollapsed ? "justify-center" : ""}`}
+                >
+                  <span className="text-base">{item.icon}</span>
+                  {!isSidebarCollapsed && (
+                    <span className="truncate">{item.label}</span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Нижній блок у сайдбарі: швидке нагадування та картка профілю */}
+        <div className="space-y-2">
+          {!isSidebarCollapsed && (
+            <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3 text-[11px] text-slate-400">
+              <p className="font-semibold text-teal-300">🌙 Режим сну</p>
+              <p className="mt-0.5">Відбій заплановано на {profile.bedTime}</p>
+            </div>
+          )}
 
           <button
             onClick={() => setActiveTab("profile")}
-            className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs hover:bg-slate-700"
+            className={`flex w-full items-center gap-2.5 rounded-xl border border-slate-800 bg-slate-900/90 p-2.5 text-xs hover:border-slate-700 ${
+              isSidebarCollapsed ? "justify-center" : ""
+            }`}
           >
-            <span>🧑‍🚀 {profile.name}</span>
-            <span className="font-mono text-cyan-400">[{profile.id}]</span>
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-500/20 font-bold text-teal-300">
+              {profile.name.charAt(0)}
+            </span>
+            {!isSidebarCollapsed && (
+              <div className="overflow-hidden text-left">
+                <p className="truncate font-semibold text-white">
+                  {profile.name}
+                </p>
+                <p className="text-[10px] text-slate-400">
+                  {profile.age} років
+                </p>
+              </div>
+            )}
           </button>
         </div>
+      </aside>
 
-        {/* Навігаційні вкладки */}
-        <nav className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pt-1">
-          {(
-            [
-              { id: "dashboard", label: "🛰 Mission Control" },
-              { id: "psych", label: "🧠 Психологія та Щоденник" },
-              { id: "sensors", label: "👁 SANS-Камера та Реакція" },
-              { id: "physical", label: "😴 Сон і Реабілітація" },
-              { id: "profile", label: "🪪 Профіль екіпажу" },
-            ] as const
-          ).map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`border-b-2 px-4 py-2.5 text-xs font-semibold whitespace-nowrap transition ${
-                activeTab === tab.id
-                  ? "border-cyan-400 text-cyan-300"
-                  : "border-transparent text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </header>
+      {/* Права робоча область */}
+      <div className="flex flex-1 flex-col overflow-x-hidden">
+        {/* Компактна верхня смуга зі статусом та нагадуваннями */}
+        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 bg-[#0b1324]/70 px-6 py-3.5 backdrop-blur">
+          <div>
+            <h1 className="text-sm font-bold text-white">
+              {navItems.find((n) => n.id === activeTab)?.label}
+            </h1>
+            <p className="text-[11px] text-slate-400">
+              Vital Indicators Tracking &amp; Analysis • Персональний моніторинг
+              (16+)
+            </p>
+          </div>
 
-      {/* Основний контент */}
-      <main className="mx-auto max-w-7xl px-4 py-6">
-        {!dismissedAlerts && (
-          <EmergencyBanner
-            status={alertStatus}
-            alerts={activeAlerts}
-            orbit={orbit}
-            onDismiss={() => setDismissedAlerts(true)}
-          />
-        )}
+          <div className="flex items-center gap-2.5 text-xs text-slate-300">
+            <span className="rounded-full border border-slate-800 bg-slate-900 px-3 py-1">
+              💧 Перерва для очей та води
+            </span>
+            <span className="hidden rounded-full border border-teal-500/30 bg-teal-950/30 px-3 py-1 text-teal-300 sm:inline">
+              ⏰ Підйом: {profile.wakeUpTime}
+            </span>
+          </div>
+        </header>
 
-        {activeTab === "dashboard" && (
-          <DashboardTab
-            profile={profile}
-            orbit={orbit}
-            onOrbitChange={setOrbit}
-            telemetry={telemetry}
-            onTelemetryChange={(t) => {
-              setTelemetry(t);
-              setDismissedAlerts(false);
-            }}
-            bloodInput={bloodInput}
-            onBloodInputChange={setBloodInput}
-            bloodResult={bloodResult}
-            onRunBloodAnalysis={handleRunBloodAnalysis}
-            isAnalyzing={isAnalyzing}
-            evaReadinessScore={evaReadinessScore}
-          />
-        )}
+        {/* Основний контент сторінки */}
+        <main className="mx-auto w-full max-w-6xl flex-1 p-6">
+          {activeTab === "dashboard" && (
+            <DashboardTab
+              history={history}
+              onSaveCheckup={(entry) => setHistory((prev) => [...prev, entry])}
+              testSummary={testSummary}
+              onGoToTests={() => setActiveTab("tests")}
+            />
+          )}
 
-        {activeTab === "psych" && (
-          <PsychAndLogTab
-            latestPsych={psychResult}
-            onSavePsych={(res) => {
-              setPsychResult(res);
-              setDismissedAlerts(false);
-            }}
-            logs={logs}
-            onAddLog={(entry) => setLogs((prev) => [entry, ...prev])}
-            missionDay={60}
-          />
-        )}
+          {activeTab === "tests" && (
+            <TestsTab
+              summary={testSummary}
+              onUpdateSummary={(upd) =>
+                setTestSummary((prev) => ({ ...prev, ...upd }))
+              }
+            />
+          )}
 
-        {activeTab === "sensors" && (
-          <BioSensorsTab
-            onSansResult={setSansResult}
-            lastReactionMs={lastReactionMs}
-            onReactionResult={setLastReactionMs}
-          />
-        )}
+          {activeTab === "history" && (
+            <HistoryAndScheduleTab
+              history={history}
+              exercises={exercises}
+              onToggleExercise={(id) =>
+                setExercises((prev) =>
+                  prev.map((ex) =>
+                    ex.id === id ? { ...ex, completed: !ex.completed } : ex,
+                  ),
+                )
+              }
+            />
+          )}
 
-        {activeTab === "physical" && (
-          <PhysicalSleepTab
-            sleepHistory={sleepHistory}
-            onAddSleep={(rec) => setSleepHistory((prev) => [...prev, rec])}
-          />
-        )}
-
-        {activeTab === "profile" && (
-          <div className="max-w-xl rounded-xl border border-slate-800 bg-slate-900/80 p-6">
-            <h2 className="text-lg font-bold text-white">
-              🪪 Особиста картка астронавта
-            </h2>
-            <div className="mt-4 space-y-3 text-sm">
+          {activeTab === "profile" && (
+            <div className="max-w-lg space-y-4 rounded-2xl border border-slate-800 bg-slate-900/90 p-6">
+              <h2 className="text-base font-bold text-white">
+                ⚙️ Налаштування профілю
+              </h2>
               <div>
-                <label className="text-xs text-slate-400">
-                  Ім&apos;я та прізвище
-                </label>
+                <label className="text-xs text-slate-400">Ім&apos;я</label>
                 <input
                   value={profile.name}
                   onChange={(e) =>
                     setProfile({ ...profile, name: e.target.value })
                   }
-                  className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                  className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-slate-400">
+                  Вік (від 16 років)
+                </label>
+                <input
+                  type="number"
+                  min={16}
+                  max={100}
+                  value={profile.age}
+                  onChange={(e) =>
+                    setProfile({
+                      ...profile,
+                      age: Math.max(16, Number(e.target.value)),
+                    })
+                  }
+                  className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-slate-400">ID екіпажу</label>
+                  <label className="text-xs text-slate-400">
+                    Бажаний підйом
+                  </label>
                   <input
-                    value={profile.id}
+                    type="time"
+                    value={profile.wakeUpTime}
                     onChange={(e) =>
-                      setProfile({ ...profile, id: e.target.value })
+                      setProfile({ ...profile, wakeUpTime: e.target.value })
                     }
-                    className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                    className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-400">Група крові</label>
+                  <label className="text-xs text-slate-400">
+                    Відбій (нагадування)
+                  </label>
                   <input
-                    value={profile.bloodType}
+                    type="time"
+                    value={profile.bedTime}
                     onChange={(e) =>
-                      setProfile({ ...profile, bloodType: e.target.value })
+                      setProfile({ ...profile, bedTime: e.target.value })
                     }
-                    className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                    className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
                   />
                 </div>
               </div>
               <div>
-                <label className="text-xs text-slate-400">
-                  Посада на борту
-                </label>
+                <label className="text-xs text-slate-400">Особиста ціль</label>
                 <input
-                  value={profile.role}
+                  value={profile.goal}
                   onChange={(e) =>
-                    setProfile({ ...profile, role: e.target.value })
+                    setProfile({ ...profile, goal: e.target.value })
                   }
-                  className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                  className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
                 />
               </div>
             </div>
-          </div>
-        )}
-      </main>
+          )}
+        </main>
+      </div>
     </div>
   );
 }
