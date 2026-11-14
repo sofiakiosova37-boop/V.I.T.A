@@ -1,3 +1,17 @@
+from fastapi import FastAPI
+from routers import registration
+
+app = FastAPI()
+app.include_router(registration.router)
+
+
+
+
+
+
+
+
+"""
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -67,3 +81,4 @@ async def analyze_blood_endpoint(payload: BloodMetricsInput):
 @app.get("/")
 async def root():
     return {"message": "Space Health API працює! Використовуйте /docs для перегляду документації."}
+    """
