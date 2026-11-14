@@ -14,13 +14,13 @@ export const HistoryAndScheduleTab: React.FC<HistoryAndScheduleTabProps> = ({
 }) => {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      {/* Історія та динаміка по тижнях */}
+      {/* Weekly History & Trends */}
       <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-6">
         <h3 className="text-base font-bold text-white">
-          📈 Історія та динаміка чекапів
+          📈 Checkup History &amp; Trends
         </h3>
         <p className="mt-1 text-xs text-slate-400">
-          Хронологія ваших щотижневих оцінок сну та психологічного стану
+          Timeline of your weekly sleep and mental well-being assessments
         </p>
 
         <div className="mt-4 space-y-2.5">
@@ -47,13 +47,13 @@ export const HistoryAndScheduleTab: React.FC<HistoryAndScheduleTabProps> = ({
                     </span>
                   </p>
                   <p className="mt-0.5 text-slate-400">
-                    Психологія:{" "}
+                    Mental Index:{" "}
                     <strong className="text-indigo-300">
                       {item.psychScore}%
                     </strong>{" "}
-                    • Сон:{" "}
+                    • Sleep:{" "}
                     <strong className="text-teal-300">
-                      {item.sleepHours} год
+                      {item.sleepHours} hrs
                     </strong>{" "}
                     ({item.sleepQuality}/10)
                   </p>
@@ -70,23 +70,23 @@ export const HistoryAndScheduleTab: React.FC<HistoryAndScheduleTabProps> = ({
                 }`}
               >
                 {item.status === "green"
-                  ? "Норма"
+                  ? "Optimal"
                   : item.status === "yellow"
-                    ? "Увага"
-                    : "Критично"}
+                    ? "Caution"
+                    : "Critical"}
               </span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Розклад фізичних вправ */}
+      {/* Weekly Exercise Schedule */}
       <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-6">
         <h3 className="text-base font-bold text-white">
-          🏃 Тижневий розклад фізичної активності
+          🏃 Weekly Exercise Schedule
         </h3>
         <p className="mt-1 text-xs text-slate-400">
-          Відмічайте виконані тренування для підтримки тонусу та зняття стресу
+          Check off completed workouts to maintain energy and relieve stress
         </p>
 
         <div className="mt-4 space-y-2.5">
@@ -100,7 +100,7 @@ export const HistoryAndScheduleTab: React.FC<HistoryAndScheduleTabProps> = ({
                   type="checkbox"
                   checked={ex.completed}
                   onChange={() => onToggleExercise(ex.id)}
-                  className="h-4 w-4 accent-indigo-500"
+                  className="h-4 w-4 accent-teal-500"
                 />
                 <div>
                   <p
@@ -114,7 +114,7 @@ export const HistoryAndScheduleTab: React.FC<HistoryAndScheduleTabProps> = ({
                 </div>
               </div>
               <span className="rounded-lg bg-slate-800 px-2.5 py-1 text-[11px] text-slate-300">
-                {ex.completed ? "Виконано" : "Заплановано"}
+                {ex.completed ? "Completed" : "Scheduled"}
               </span>
             </label>
           ))}

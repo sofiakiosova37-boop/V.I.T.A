@@ -8,13 +8,13 @@ export const ReactionTest: React.FC<SingleTestProps> = ({
   const [ms, setMs] = useState<number>(savedResult ?? 250);
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-6 space-y-4">
+    <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/90 p-6">
       <h3 className="text-base font-bold text-white">
-        ⚡ Тест швидкості реакції
+        ⚡ Reaction Speed &amp; Focus Test
       </h3>
       <p className="text-xs text-slate-400">
-        [Модуль у розробці] Тут буде інтерактивна гра на швидкість кліку (у
-        мілісекундах).
+        [Module in progress] Interactive visual reaction timer (in milliseconds)
+        will be implemented here.
       </p>
 
       <div className="flex items-center gap-3">
@@ -30,7 +30,7 @@ export const ReactionTest: React.FC<SingleTestProps> = ({
           onClick={() => onSaveResult(ms)}
           className="rounded-xl bg-teal-600 px-4 py-2 text-xs font-semibold text-white hover:bg-teal-500"
         >
-          Зберегти час (мс)
+          Save Time (ms)
         </button>
       </div>
     </div>

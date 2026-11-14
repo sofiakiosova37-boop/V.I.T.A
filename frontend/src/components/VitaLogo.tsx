@@ -9,13 +9,11 @@ export const VitaLogo: React.FC<VitaLogoProps> = ({ collapsed, onClick }) => {
   return (
     <button
       onClick={onClick}
-      title={collapsed ? "Розгорнути меню" : "Згорнути меню"}
+      title={collapsed ? "Expand menu" : "Collapse menu"}
       className="group flex w-full items-center gap-3 rounded-xl p-2 text-left transition hover:bg-teal-500/10 focus:outline-none"
     >
-      {/* Векторна емблема за мотивами твого логотипа V.I.T.A */}
       <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#091224] ring-1 ring-teal-400/40 transition group-hover:ring-teal-300 group-hover:shadow-[0_0_15px_rgba(45,212,191,0.35)]">
         <svg viewBox="0 0 100 100" className="h-9 w-9">
-          {/* Зовнішнє орбітальне кільце та 4 вузли */}
           <circle
             cx="50"
             cy="50"
@@ -57,7 +55,6 @@ export const VitaLogo: React.FC<VitaLogoProps> = ({ collapsed, onClick }) => {
             strokeWidth="2"
           />
 
-          {/* Чотирипроменева зірка */}
           <path
             d="M50 16 Q54 46 84 50 Q54 54 50 84 Q46 54 16 50 Q46 46 50 16 Z"
             fill="#112647"
@@ -65,7 +62,6 @@ export const VitaLogo: React.FC<VitaLogoProps> = ({ collapsed, onClick }) => {
             strokeWidth="2.2"
           />
 
-          {/* Лінія пульсу всередині */}
           <polyline
             points="22,50 37,50 42,39 48,63 54,31 60,55 65,47 78,50"
             fill="none"
@@ -77,7 +73,6 @@ export const VitaLogo: React.FC<VitaLogoProps> = ({ collapsed, onClick }) => {
         </svg>
       </div>
 
-      {/* Текстова частина (ховається при згортанні) */}
       {!collapsed && (
         <div className="overflow-hidden">
           <div className="flex items-center gap-2">

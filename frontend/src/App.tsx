@@ -17,9 +17,9 @@ export function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
   const [profile, setProfile] = useState<UserProfile>({
-    name: "Анастасія",
+    name: "Anastasiia",
     age: 19,
-    goal: "Збалансувати навчання, сон та знизити рівень стресу",
+    goal: "Balance university studies, sleep schedule, and lower stress levels",
     wakeUpTime: "07:30",
     bedTime: "23:30",
   });
@@ -27,8 +27,8 @@ export function App() {
   const [history, setHistory] = useState<WeeklyCheckupEntry[]>([
     {
       id: "w1",
-      weekLabel: "Тиж. 1",
-      date: "25.10.2026",
+      weekLabel: "Week 1",
+      date: "25/10/2026",
       psychScore: 62,
       sleepHours: 6.5,
       sleepQuality: 6,
@@ -36,8 +36,8 @@ export function App() {
     },
     {
       id: "w2",
-      weekLabel: "Тиж. 2",
-      date: "01.11.2026",
+      weekLabel: "Week 2",
+      date: "01/11/2026",
       psychScore: 74,
       sleepHours: 7.5,
       sleepQuality: 7,
@@ -45,8 +45,8 @@ export function App() {
     },
     {
       id: "w3",
-      weekLabel: "Тиж. 3",
-      date: "08.11.2026",
+      weekLabel: "Week 3",
+      date: "08/11/2026",
       psychScore: 80,
       sleepHours: 8.0,
       sleepQuality: 8,
@@ -61,55 +61,54 @@ export function App() {
   const [exercises, setExercises] = useState<ExerciseItem[]>([
     {
       id: "1",
-      day: "Понеділок",
-      title: "Розминка для спини та шиї після комп’ютера",
-      duration: "15 хв",
-      category: "Спина та постава",
+      day: "Monday",
+      title: "Neck and back stretch after computer work",
+      duration: "15 min",
+      category: "Back & Posture",
       completed: true,
     },
     {
       id: "2",
-      day: "Середа",
-      title: "Швидка прогулянка на свіжому повітрі",
-      duration: "35 хв",
-      category: "Кардіо",
+      day: "Wednesday",
+      title: "Brisk outdoor walk",
+      duration: "35 min",
+      category: "Cardio",
       completed: false,
     },
     {
       id: "3",
-      day: "П’ятниця",
-      title: "Дихальна релаксація та розтяжка перед сном",
-      duration: "20 хв",
-      category: "Релаксація",
+      day: "Friday",
+      title: "Breathing relaxation and bedtime stretch",
+      duration: "20 min",
+      category: "Relaxation",
       completed: false,
     },
     {
       id: "4",
-      day: "Неділя",
-      title: "Активне кардіо або біг у комфортному темпі",
-      duration: "40 хв",
-      category: "Кардіо",
+      day: "Sunday",
+      title: "Moderate cardio or jogging",
+      duration: "40 min",
+      category: "Cardio",
       completed: false,
     },
   ]);
 
   const navItems: { id: Tab; icon: string; label: string }[] = [
-    { id: "dashboard", icon: "🚦", label: "Щотижневий чекап" },
-    { id: "tests", icon: "🧪", label: "Тести та реакція" },
-    { id: "history", icon: "📈", label: "Історія та вправи" },
-    { id: "profile", icon: "⚙️", label: "Профіль" },
+    { id: "dashboard", icon: "🚦", label: "Weekly Checkup" },
+    { id: "tests", icon: "🧪", label: "Tests & Reaction" },
+    { id: "history", icon: "📈", label: "History & Exercises" },
+    { id: "profile", icon: "⚙️", label: "Profile" },
   ];
 
   return (
-    <div className="flex min-h-screen bg-[#070d19] text-slate-100 font-sans">
-      {/* Ліва бокова панель навігації */}
+    <div className="flex min-h-screen bg-[#070d19] font-sans text-slate-100">
+      {/* Left Sidebar Navigation */}
       <aside
         className={`sticky top-0 flex h-screen flex-col justify-between border-r border-slate-800/80 bg-[#0b1324] p-3 transition-all duration-300 ${
           isSidebarCollapsed ? "w-[76px]" : "w-64"
         }`}
       >
         <div>
-          {/* Логотип у верхньому лівому кутку — клік відкриває/закриває панель */}
           <VitaLogo
             collapsed={isSidebarCollapsed}
             onClick={() => setIsSidebarCollapsed((prev) => !prev)}
@@ -117,7 +116,6 @@ export function App() {
 
           <div className="my-3 border-t border-slate-800/80" />
 
-          {/* Пункти меню */}
           <nav className="space-y-1.5">
             {navItems.map((item) => {
               const isActive = activeTab === item.id;
@@ -142,12 +140,11 @@ export function App() {
           </nav>
         </div>
 
-        {/* Нижній блок у сайдбарі: швидке нагадування та картка профілю */}
         <div className="space-y-2">
           {!isSidebarCollapsed && (
             <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3 text-[11px] text-slate-400">
-              <p className="font-semibold text-teal-300">🌙 Режим сну</p>
-              <p className="mt-0.5">Відбій заплановано на {profile.bedTime}</p>
+              <p className="font-semibold text-teal-300">🌙 Sleep Schedule</p>
+              <p className="mt-0.5">Bedtime scheduled at {profile.bedTime}</p>
             </div>
           )}
 
@@ -165,40 +162,36 @@ export function App() {
                 <p className="truncate font-semibold text-white">
                   {profile.name}
                 </p>
-                <p className="text-[10px] text-slate-400">
-                  {profile.age} років
-                </p>
+                <p className="text-[10px] text-slate-400">{profile.age} y.o.</p>
               </div>
             )}
           </button>
         </div>
       </aside>
 
-      {/* Права робоча область */}
+      {/* Main Content Area */}
       <div className="flex flex-1 flex-col overflow-x-hidden">
-        {/* Компактна верхня смуга зі статусом та нагадуваннями */}
         <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 bg-[#0b1324]/70 px-6 py-3.5 backdrop-blur">
           <div>
             <h1 className="text-sm font-bold text-white">
               {navItems.find((n) => n.id === activeTab)?.label}
             </h1>
             <p className="text-[11px] text-slate-400">
-              Vital Indicators Tracking &amp; Analysis • Персональний моніторинг
-              (16+)
+              Vital Indicators Tracking &amp; Analysis • Personal Health
+              Monitoring (16+)
             </p>
           </div>
 
           <div className="flex items-center gap-2.5 text-xs text-slate-300">
             <span className="rounded-full border border-slate-800 bg-slate-900 px-3 py-1">
-              💧 Перерва для очей та води
+              💧 Eye &amp; Hydration Break
             </span>
             <span className="hidden rounded-full border border-teal-500/30 bg-teal-950/30 px-3 py-1 text-teal-300 sm:inline">
-              ⏰ Підйом: {profile.wakeUpTime}
+              ⏰ Wake-up: {profile.wakeUpTime}
             </span>
           </div>
         </header>
 
-        {/* Основний контент сторінки */}
         <main className="mx-auto w-full max-w-6xl flex-1 p-6">
           {activeTab === "dashboard" && (
             <DashboardTab
@@ -235,10 +228,10 @@ export function App() {
           {activeTab === "profile" && (
             <div className="max-w-lg space-y-4 rounded-2xl border border-slate-800 bg-slate-900/90 p-6">
               <h2 className="text-base font-bold text-white">
-                ⚙️ Налаштування профілю
+                ⚙️ Profile Settings
               </h2>
               <div>
-                <label className="text-xs text-slate-400">Ім&apos;я</label>
+                <label className="text-xs text-slate-400">Name</label>
                 <input
                   value={profile.name}
                   onChange={(e) =>
@@ -248,9 +241,7 @@ export function App() {
                 />
               </div>
               <div>
-                <label className="text-xs text-slate-400">
-                  Вік (від 16 років)
-                </label>
+                <label className="text-xs text-slate-400">Age (16+)</label>
                 <input
                   type="number"
                   min={16}
@@ -268,7 +259,7 @@ export function App() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-slate-400">
-                    Бажаний підйом
+                    Target Wake-up
                   </label>
                   <input
                     type="time"
@@ -281,7 +272,7 @@ export function App() {
                 </div>
                 <div>
                   <label className="text-xs text-slate-400">
-                    Відбій (нагадування)
+                    Bedtime Reminder
                   </label>
                   <input
                     type="time"
@@ -294,7 +285,7 @@ export function App() {
                 </div>
               </div>
               <div>
-                <label className="text-xs text-slate-400">Особиста ціль</label>
+                <label className="text-xs text-slate-400">Personal Goal</label>
                 <input
                   value={profile.goal}
                   onChange={(e) =>

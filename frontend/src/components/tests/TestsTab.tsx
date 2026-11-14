@@ -21,41 +21,40 @@ export const TestsTab: React.FC<TestsTabProps> = ({
   const tabs = [
     {
       id: "depression" as const,
-      title: "🌧 Скринінг депресії",
+      title: "🌧 Depression Screening",
       badge:
         summary.depressionScore !== undefined
-          ? `${summary.depressionScore} балів`
-          : "Не пройдено",
+          ? `${summary.depressionScore} pts`
+          : "Not taken",
     },
     {
       id: "burnout" as const,
-      title: "🔋 Тест на вигорання",
+      title: "🔋 Burnout Assessment",
       badge:
         summary.burnoutPercent !== undefined
           ? `${summary.burnoutPercent}%`
-          : "Не пройдено",
+          : "Not taken",
     },
     {
       id: "sleep" as const,
-      title: "🌙 Якість сну",
+      title: "🌙 Sleep Quality Index",
       badge:
         summary.sleepIndex !== undefined
           ? `${summary.sleepIndex}%`
-          : "Не пройдено",
+          : "Not taken",
     },
     {
       id: "reaction" as const,
-      title: "⚡ Швидкість реакції",
+      title: "⚡ Reaction Speed",
       badge:
         summary.reactionMs !== undefined
-          ? `${summary.reactionMs} мс`
-          : "Не пройдено",
+          ? `${summary.reactionMs} ms`
+          : "Not taken",
     },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Меню вибору тесту */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {tabs.map((tab) => (
           <button
@@ -75,7 +74,6 @@ export const TestsTab: React.FC<TestsTabProps> = ({
         ))}
       </div>
 
-      {/* Рендер ізольованого компонента кожного розробника */}
       {selectedTest === "depression" && (
         <DepressionTest
           savedResult={summary.depressionScore}

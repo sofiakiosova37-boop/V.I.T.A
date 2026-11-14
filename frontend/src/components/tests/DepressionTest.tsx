@@ -8,15 +8,15 @@ export const DepressionTest: React.FC<SingleTestProps> = ({
   const [score, setScore] = useState<number>(savedResult ?? 0);
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-6 space-y-4">
+    <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/90 p-6">
       <h3 className="text-base font-bold text-white">
-        🌧 Тест на скринінг депресії
+        🌧 Depression Screening Test
       </h3>
       <p className="text-xs text-slate-400">
-        [Модуль у розробці] Тут буде опитувальник PHQ-9 та розрахунок балів.
+        [Module in progress] PHQ-9 questionnaire and score calculation will be
+        implemented here.
       </p>
 
-      {/* Тимчасова перевірка зв'язку з головним додатком */}
       <div className="flex items-center gap-3">
         <input
           type="number"
@@ -30,7 +30,7 @@ export const DepressionTest: React.FC<SingleTestProps> = ({
           onClick={() => onSaveResult(score)}
           className="rounded-xl bg-teal-600 px-4 py-2 text-xs font-semibold text-white hover:bg-teal-500"
         >
-          Зберегти результат
+          Save Result
         </button>
       </div>
     </div>

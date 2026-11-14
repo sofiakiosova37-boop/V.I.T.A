@@ -10,19 +10,19 @@ export interface UserProfile {
 
 export interface WeeklyCheckupEntry {
   id: string;
-  weekLabel: string; // Напр., "Тиж. 1", "Тиж. 2"
+  weekLabel: string; // e.g., "Week 1", "Week 2"
   date: string;
-  psychScore: number; // 0-100 (чим вище, тим краще психологічне самопочуття)
-  sleepHours: number; // середня тривалість сну за тиждень
+  psychScore: number; // 0-100 (higher means better mental well-being)
+  sleepHours: number; // average sleep duration per week
   sleepQuality: number; // 1-10
   status: TrafficLightStatus;
 }
 
 export interface TestSummary {
-  depressionScore?: number; // 0-27 (шкала PHQ-9)
+  depressionScore?: number; // 0-27 (PHQ-9 scale)
   burnoutPercent?: number; // 0-100%
   sleepIndex?: number; // 0-100%
-  reactionMs?: number; // мс
+  reactionMs?: number; // ms
 }
 
 export interface ExerciseItem {
@@ -30,6 +30,6 @@ export interface ExerciseItem {
   day: string;
   title: string;
   duration: string;
-  category: "Кардіо" | "Спина та постава" | "Релаксація";
+  category: "Cardio" | "Back & Posture" | "Relaxation";
   completed: boolean;
 }

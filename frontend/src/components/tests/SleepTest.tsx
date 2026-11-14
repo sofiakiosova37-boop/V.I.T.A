@@ -8,12 +8,13 @@ export const SleepTest: React.FC<SingleTestProps> = ({
   const [sleepIndex, setSleepIndex] = useState<number>(savedResult ?? 80);
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-6 space-y-4">
+    <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/90 p-6">
       <h3 className="text-base font-bold text-white">
-        🌙 Тест якості та гігієни сну
+        🌙 Sleep Quality &amp; Hygiene Assessment
       </h3>
       <p className="text-xs text-slate-400">
-        [Модуль у розробці] Тут буде анкета якості сну (PSQI) та рекомендації.
+        [Module in progress] Sleep quality index (PSQI) questionnaire and
+        insights will be implemented here.
       </p>
 
       <div className="flex items-center gap-3">
@@ -29,7 +30,7 @@ export const SleepTest: React.FC<SingleTestProps> = ({
           onClick={() => onSaveResult(sleepIndex)}
           className="rounded-xl bg-teal-600 px-4 py-2 text-xs font-semibold text-white hover:bg-teal-500"
         >
-          Зберегти індекс сну
+          Save Sleep Index
         </button>
       </div>
     </div>
