@@ -9,6 +9,7 @@ from routers import registration
 import database as db
 from burnscoring import calculate
 from sleep_scoring import calculate_sleep
+from depressionscoring import calculate_depression
 
 app = FastAPI()
 app.add_middleware(
@@ -38,9 +39,9 @@ class Submission(BaseModel):
 @app.post("/tests/burnout/submit")
 def submit(data: Submission):
     if too_soon(data.user_id, "burnout"):
-        raise HTTPException(409, "Тест можно проходить раз в неделю")
+        raise HTTPException(409, "The burnout test can only be taken once a week.")
     if len(data.answers) != 22 or any(not 0 <= a.value <= 6 for a in data.answers):
-        raise HTTPException(400, "Неверные ответы")
+        raise HTTPException(400, "Incorrect answers")
     result = calculate([a.dict() for a in data.answers])
     db.save_result(data.user_id, "burnout", {"sections": result})
     return {"sections": result}
@@ -48,6 +49,22 @@ def submit(data: Submission):
 @app.get("/tests/burnout/history/{user_id}")
 def history(user_id: int):
     return db.get_history(user_id, "burnout")
+
+@app.post("/tests/mood/submit")
+def submit_mood(data: Submission):
+    if too_soon(data.user_id, "mood"):
+        raise HTTPException(409, "The mood test can only be taken once a week.")
+    ids = sorted(a.question_id for a in data.answers)
+    if ids != list(range(1, 22)) or any(not 0 <= a.value <= 3 for a in data.answers):
+        raise HTTPException(400, "Incorrect answers")
+    result = calculate_depression([a.dict() for a in data.answers])
+    db.save_result(data.user_id, "mood", result)
+    return result
+
+
+@app.get("/tests/mood/history/{user_id}")
+def mood_history(user_id: int):
+    return db.get_history(user_id, "mood")
 
 class SleepSubmission(BaseModel):
     user_id: int
@@ -66,7 +83,7 @@ class SleepSubmission(BaseModel):
 @app.post("/tests/sleep/submit")
 def submit_sleep(data: SleepSubmission):
     if too_soon(data.user_id, "sleep"):
-        raise HTTPException(409, "Сегодня вы уже заполняли дневник сна")
+        raise HTTPException(409, "The sleep test can only be taken once a day.")
     d = data.dict()
     result = calculate_sleep(d)
     details = {**d, **result}
@@ -74,11 +91,9 @@ def submit_sleep(data: SleepSubmission):
     db.save_result(data.user_id, "sleep", details)
     return result
 
-
 @app.get("/tests/sleep/history/{user_id}")
 def sleep_history(user_id: int):
     return db.get_history(user_id, "sleep")
-
 
 @app.get("/tests/sleep/summary/{user_id}")
 def sleep_summary(user_id: int):
