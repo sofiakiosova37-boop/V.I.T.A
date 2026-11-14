@@ -320,7 +320,7 @@ export const DashboardTab: React.FC<DashboardTabProps> = ({
                 {testSummary.reactionMs} ms
               </strong>
               {testSummary.burnoutPercent !== undefined &&
-                ` • Burnout Index: ${testSummary.burnoutPercent}%`}
+                ` • Burnout Index: ${testSummary.burnoutPercent} pts`}
             </p>
           )}
         </div>

@@ -32,7 +32,7 @@ export const TestsTab: React.FC<TestsTabProps> = ({
       title: "🔋 Burnout Assessment",
       badge:
         summary.burnoutPercent !== undefined
-          ? `${summary.burnoutPercent}%`
+          ? `${summary.burnoutPercent} pts`
           : "Not taken",
     },
     {
