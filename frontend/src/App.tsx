@@ -4,6 +4,7 @@ import { HistoryAndScheduleTab } from "./components/HistoryAndScheduleTab";
 import { TestsTab } from "./components/tests/TestsTab";
 import { VitaLogo } from "./components/VitaLogo";
 import { VirtualPet } from './components/VirtualPet';
+import { AchievementsPage } from './components/AchievementsPage';
 import {
   ExerciseItem,
   TestSummary,
@@ -11,7 +12,7 @@ import {
   WeeklyCheckupEntry,
 } from "./types/health";
 
-type Tab = "dashboard" | "tests" | "history" | "profile";
+type Tab = "dashboard" | "tests" | "history" | "profile" | "achievements";
 
 export function App() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
@@ -98,12 +99,12 @@ export function App() {
     { id: "dashboard", icon: "🚦", label: "Weekly Checkup" },
     { id: "tests", icon: "🧪", label: "Tests & Reaction" },
     { id: "history", icon: "📈", label: "History & Exercises" },
+    { id: "achievements", icon: "🏆", label: "Achievements" },
     { id: "profile", icon: "⚙️", label: "Profile" },
   ];
 
   return (
     <div className="flex min-h-screen bg-[#070d19] font-sans text-slate-100">
-      {/* Left Sidebar Navigation */}
       <aside
         className={`sticky top-0 flex h-screen flex-col justify-between border-r border-slate-800/80 bg-[#0b1324] p-3 transition-all duration-300 ${
           isSidebarCollapsed ? "w-[76px]" : "w-64"
@@ -170,7 +171,6 @@ export function App() {
         </div>
       </aside>
 
-      {/* Main Content Area */}
       <div className="flex flex-1 flex-col overflow-x-hidden">
         <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 bg-[#0b1324]/70 px-6 py-3.5 backdrop-blur">
           <div>
@@ -225,6 +225,8 @@ export function App() {
               }
             />
           )}
+
+          {activeTab === "achievements" && <AchievementsPage />}
 
           {activeTab === "profile" && (
             <div className="max-w-lg space-y-4 rounded-2xl border border-slate-800 bg-slate-900/90 p-6">

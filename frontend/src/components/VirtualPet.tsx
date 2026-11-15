@@ -73,7 +73,7 @@ export function VirtualPet() {
           animation: isWalking ? 'walkAnim 0.3s infinite alternate' : 'idleAnim 2s infinite ease-in-out',
         }}
       >
-        🐶
+        🐰
       </div>
 
       <style>{`
