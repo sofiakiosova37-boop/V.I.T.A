@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { get } from "../services/api";
 
+interface Props {
+  userId?: number;
+}
 interface Achievement {
   id: number;
   title: string;
@@ -39,20 +43,23 @@ const ACHIEVEMENTS_DATA: Achievement[] = [
   },
 ];
 
-export const AchievementsPage: React.FC = () => {
+export const AchievementsPage: React.FC<Props> = ({ userId }) => {
   const [completedTests, setCompletedTests] = useState<number>(0);
+  const [streak, setStreak] = useState<number>(0);
 
   useEffect(() => {
-    const updateCompletedCount = () => {
-      const saved = localStorage.getItem("vita_completed_tests");
-      setCompletedTests(saved ? parseInt(saved, 10) : 0);
-    };
-
-    updateCompletedCount();
-
-    window.addEventListener("storage", updateCompletedCount);
-    return () => window.removeEventListener("storage", updateCompletedCount);
-  }, []);
+    if (!userId) return;
+    get(`/achievements/${userId}`)
+      .then(({ ok, data }) => {
+        if (ok) {
+          setCompletedTests(data.completed_tests);
+          setStreak(data.streak_days);
+        }
+      })
+      .catch(() => {
+        // сервер недоступен: остаются нули
+      });
+  }, [userId]);
 
   return (
     <div className="mx-auto max-w-4xl p-4 text-[#2b3a34]">
@@ -65,10 +72,14 @@ export const AchievementsPage: React.FC = () => {
           achievements.
         </p>
 
-        <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-[#c8d6cc] bg-[#fcfbf7] px-5 py-2 shadow-2xs">
+        <div className="mt-4 inline-flex items-center gap-5 rounded-full border border-[#c8d6cc] bg-[#fcfbf7] px-5 py-2 shadow-2xs">
           <span className="text-xs font-semibold text-[#475b52]">
             Completed tests:{" "}
             <strong className="text-[#3f6656]">{completedTests}</strong>
+          </span>
+          <span className="text-xs font-semibold text-[#475b52]">
+            🔥 Streak:{" "}
+            <strong className="text-[#3f6656]">{streak}</strong> days
           </span>
         </div>
       </header>
@@ -121,7 +132,8 @@ export const AchievementsPage: React.FC = () => {
                     ></div>
                   </div>
                   <span className="min-w-[35px] text-right text-[11px] font-bold text-[#497261]">
-                    {completedTests} / {item.requiredTests}
+                    {Math.min(completedTests, item.requiredTests)} /{" "}
+                    {item.requiredTests}
                   </span>
                 </div>
               </div>
