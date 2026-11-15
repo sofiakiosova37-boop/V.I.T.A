@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 
 export function VirtualPet() {
-  const [position, setPosition] = useState({ x: 100, y: window.innerHeight - 70 });
+  const [position, setPosition] = useState({
+    x: 100,
+    y: window.innerHeight - 70,
+  });
   const [isWalking, setIsWalking] = useState(false);
   const [facingLeft, setFacingLeft] = useState(false);
 
@@ -49,28 +52,30 @@ export function VirtualPet() {
   return (
     <div
       style={{
-        position: 'fixed',
+        position: "fixed",
         left: `${position.x}px`,
         top: `${position.y}px`,
         zIndex: 999999,
-        pointerEvents: 'none',
+        pointerEvents: "none",
         transform: `scaleX(${facingLeft ? -1 : 1})`,
-        transition: 'transform 0.2s ease',
+        transition: "transform 0.2s ease",
       }}
     >
       <div
         style={{
-          width: '48px',
-          height: '48px',
-          backgroundColor: '#0f172a',
-          borderRadius: '14px',
-          border: '2px solid #2dd4bf',
-          boxShadow: '0 4px 14px rgba(45, 212, 191, 0.3)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '26px',
-          animation: isWalking ? 'walkAnim 0.3s infinite alternate' : 'idleAnim 2s infinite ease-in-out',
+          width: "48px",
+          height: "48px",
+          backgroundColor: "#fcfbf7",
+          borderRadius: "16px",
+          border: "2px solid #86a694",
+          boxShadow: "0 4px 12px rgba(63, 102, 86, 0.16)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "26px",
+          animation: isWalking
+            ? "walkAnim 0.3s infinite alternate"
+            : "idleAnim 2s infinite ease-in-out",
         }}
       >
         🐰

@@ -8,6 +8,13 @@ interface Question {
   options: { text: string; score: number }[];
 }
 
+interface DepressionResult {
+  score: number;
+  self_harm_alert?: boolean;
+  support_message?: string;
+  tips: string[];
+}
+
 const questions: Question[] = [
   {
     id: 1,
@@ -227,7 +234,7 @@ export const DepressionTest: React.FC<SingleTestProps> = ({
 }) => {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<DepressionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const currentQuestion = questions[currentIndex];
   const isLastQuestion = currentIndex === questions.length - 1;
@@ -257,54 +264,54 @@ export const DepressionTest: React.FC<SingleTestProps> = ({
   const isFinished = Object.keys(answers).length === questions.length;
 
   const handleSubmitResult = async () => {
-  if (!userId) {
-    setError("Please sign in first.");
-    return;
-  }
-  setSaving(true);
-  try {
-    const formattedAnswers = Object.entries(answers).map(([qId, score]) => ({
-      question_id: Number(qId),
-      value: score,
-    }));
-    const { ok, data } = await post("/tests/mood/submit", {
-      user_id: userId,
-      answers: formattedAnswers,
-    });
-    if (!ok) {
-      setError(data.detail ?? "Could not save the result.");
+    if (!userId) {
+      setError("Please sign in first.");
       return;
     }
-    setError(null);
-    setResult(data);
-    onSaveResult?.(data.score);
-  } catch {
-    setError("No connection to the server. Is the backend running?");
-  } finally {
-    setSaving(false);
-  }
-};
+    setSaving(true);
+    try {
+      const formattedAnswers = Object.entries(answers).map(([qId, score]) => ({
+        question_id: Number(qId),
+        value: score,
+      }));
+      const { ok, data } = await post("/tests/mood/submit", {
+        user_id: userId,
+        answers: formattedAnswers,
+      });
+      if (!ok) {
+        setError(data.detail ?? "Could not save the result.");
+        return;
+      }
+      setError(null);
+      setResult(data);
+      onSaveResult?.(data.score);
+    } catch {
+      setError("No connection to the server. Is the backend running?");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const getInterpretation = (score: number) => {
     if (score <= 13) {
       return {
         text: "0–13 points — Minimal depressive symptoms (normal)",
-        color: "text-emerald-400 border-emerald-800 bg-emerald-950/40",
+        color: "text-[#35634e] border-[#b6d3c2] bg-[#dcebe2]",
       };
     } else if (score <= 19) {
       return {
         text: "14–19 points — Mild severity (subdepression)",
-        color: "text-yellow-400 border-yellow-800 bg-yellow-950/40",
+        color: "text-[#8f621d] border-[#e4cfa3] bg-[#f5e7ce]",
       };
     } else if (score <= 28) {
       return {
         text: "20–28 points — Moderate depression",
-        color: "text-orange-400 border-orange-800 bg-orange-950/40",
+        color: "text-[#a95834] border-[#e7cbbd] bg-[#fbf1ec]",
       };
     } else {
       return {
         text: "29–63 points — Severe depression",
-        color: "text-red-400 border-red-800 bg-red-950/40",
+        color: "text-[#9b3d30] border-[#e2b6ae] bg-[#f4dcd7]",
       };
     }
   };
@@ -312,42 +319,48 @@ export const DepressionTest: React.FC<SingleTestProps> = ({
   const interpretation = getInterpretation(totalScore);
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-6 space-y-6 max-w-xl mx-auto">
+    <div className="mx-auto max-w-xl space-y-6 rounded-2xl border border-[#dce3dc] bg-[#fcfbf7] p-6 shadow-xs">
       <div>
-        <div className="flex justify-between items-center mb-1">
-          <h3 className="text-base font-bold text-white">
+        <div className="mb-1 flex items-center justify-between">
+          <h3 className="text-base font-bold text-[#2b3a34]">
             🌧 Depression Screening Test
           </h3>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs font-semibold text-[#6b7d75]">
             Question {currentIndex + 1} of {questions.length}
           </span>
         </div>
-        <p className="text-xs text-slate-400">
-          Choose the statement that best describes how you have felt during the past week.
+        <p className="text-xs text-[#6b7d75]">
+          Choose the statement that best describes how you have felt during the
+          past week.
         </p>
       </div>
 
-      {!isFinished || (!hasAnsweredCurrent && currentIndex === questions.length - 1) ? (
-        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-5 space-y-4">
-          <h4 className="text-sm font-semibold text-slate-200">{currentQuestion.title}</h4>
+      {!isFinished ||
+      (!hasAnsweredCurrent && currentIndex === questions.length - 1) ? (
+        <div className="space-y-4 rounded-xl border border-[#e3e6dd] bg-[#f3f2ea] p-5">
+          <h4 className="text-sm font-bold text-[#2b3a34]">
+            {currentQuestion.title}
+          </h4>
           <div className="space-y-2.5">
             {currentQuestion.options.map((opt, idx) => {
               const isSelected = answers[currentQuestion.id] === opt.score;
               return (
                 <label
                   key={idx}
-                  className={`flex items-start gap-3 p-3 rounded-lg border text-xs cursor-pointer transition-all ${
+                  className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-xs transition-all ${
                     isSelected
-                      ? "border-teal-500 bg-teal-950/30 text-white"
-                      : "border-slate-800 bg-slate-900/50 text-slate-300 hover:border-slate-700 hover:bg-slate-900"
+                      ? "border-[#587e6e] bg-[#eaf0eb] font-bold text-[#2b3a34] shadow-2xs"
+                      : "border-[#dce3dc] bg-[#fcfbf7] text-[#475b52] hover:border-[#b7c7bc] hover:bg-[#f8f7f1]"
                   }`}
                 >
                   <input
                     type="radio"
                     name={`question-${currentQuestion.id}`}
                     checked={isSelected}
-                    onChange={() => handleOptionSelect(currentQuestion.id, opt.score)}
-                    className="mt-0.5 text-teal-600 focus:ring-teal-500 bg-slate-950 border-slate-700"
+                    onChange={() =>
+                      handleOptionSelect(currentQuestion.id, opt.score)
+                    }
+                    className="mt-0.5 accent-[#587e6e]"
                   />
                   <span className="flex-1 leading-relaxed">{opt.text}</span>
                 </label>
@@ -355,14 +368,14 @@ export const DepressionTest: React.FC<SingleTestProps> = ({
             })}
           </div>
 
-          <div className="flex justify-between items-center pt-2">
+          <div className="flex items-center justify-between pt-2">
             <button
               onClick={handlePrev}
               disabled={currentIndex === 0}
-              className={`rounded-xl px-4 py-2 text-xs font-semibold transition-colors ${
+              className={`rounded-xl px-4 py-2 text-xs font-bold transition-colors ${
                 currentIndex === 0
-                  ? "opacity-50 cursor-not-allowed bg-slate-800 text-slate-500"
-                  : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                  ? "cursor-not-allowed bg-[#e7e8df] text-[#9aa8a1]"
+                  : "bg-[#e7e8df] text-[#475b52] hover:bg-[#d8dcd1]"
               }`}
             >
               Back
@@ -371,10 +384,10 @@ export const DepressionTest: React.FC<SingleTestProps> = ({
             <button
               onClick={handleNext}
               disabled={!hasAnsweredCurrent || isLastQuestion}
-              className={`rounded-xl px-5 py-2 text-xs font-semibold text-white transition-colors ${
+              className={`rounded-xl px-5 py-2 text-xs font-bold text-white transition-colors ${
                 !hasAnsweredCurrent || isLastQuestion
-                  ? "opacity-50 cursor-not-allowed bg-teal-900/50 text-teal-300"
-                  : "bg-teal-600 hover:bg-teal-500 shadow-lg shadow-teal-950/50"
+                  ? "cursor-not-allowed bg-[#a8beb3]"
+                  : "bg-[#587e6e] shadow-xs hover:bg-[#48695b]"
               }`}
             >
               Next
@@ -383,20 +396,26 @@ export const DepressionTest: React.FC<SingleTestProps> = ({
         </div>
       ) : null}
 
-       {isFinished && (
-        <div className="rounded-xl border border-slate-800 bg-slate-950 p-5 space-y-4 animate-fadeIn">
-          <div className="text-center space-y-2">
-            <h4 className="text-sm font-bold text-white">Test Completed!</h4>
-            <div className="text-sm text-slate-300">
-              Total Score: <strong className="text-white text-base">{totalScore}</strong> / 63 points
+      {isFinished && (
+        <div className="space-y-4 rounded-xl border border-[#e3e6dd] bg-[#f3f2ea] p-5">
+          <div className="space-y-2 text-center">
+            <h4 className="text-sm font-bold text-[#2b3a34]">
+              Test Completed!
+            </h4>
+            <div className="text-sm text-[#475b52]">
+              Total Score:{" "}
+              <strong className="text-base text-[#2b3a34]">{totalScore}</strong>{" "}
+              / 63 points
             </div>
-            <div className={`text-xs px-3 py-2 rounded-lg border inline-block font-medium ${interpretation.color}`}>
+            <div
+              className={`inline-block rounded-lg border px-3 py-2 text-xs font-bold ${interpretation.color}`}
+            >
               {interpretation.text}
             </div>
           </div>
 
           {(result?.self_harm_alert || (answers[8] ?? 0) >= 1) && (
-            <div className="rounded-lg border border-red-800 bg-red-950/40 p-4 text-xs leading-relaxed text-red-200">
+            <div className="rounded-xl border border-[#e2b6ae] bg-[#f4dcd7] p-4 text-xs font-medium leading-relaxed text-[#7f2d22]">
               {result?.support_message ??
                 "You noted thoughts of harming yourself. Thank you for answering honestly. You do not have to cope with this alone: please talk today to someone you trust, a doctor or a mental health professional. If you are in immediate danger, call your local emergency number."}
             </div>
@@ -406,20 +425,24 @@ export const DepressionTest: React.FC<SingleTestProps> = ({
             <button
               onClick={handleSubmitResult}
               disabled={saving || result !== null}
-              className="rounded-xl bg-teal-600 px-6 py-2.5 text-xs font-semibold text-white hover:bg-teal-500 disabled:opacity-50 transition-colors shadow-lg shadow-teal-950/50"
+              className="rounded-xl bg-[#587e6e] px-6 py-2.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-[#48695b] disabled:opacity-50"
             >
               {saving ? "Saving..." : result ? "Saved" : "Save Result"}
             </button>
           </div>
 
-          {error && <div className="text-xs text-red-400 text-center">{error}</div>}
+          {error && (
+            <div className="text-center text-xs font-semibold text-[#9b3d30]">
+              {error}
+            </div>
+          )}
 
           {result && (
-            <div className="text-xs text-slate-300 space-y-1 text-left">
+            <div className="space-y-1.5 rounded-xl border border-[#dce3dc] bg-[#fcfbf7] p-4 text-left text-xs text-[#475b52]">
               {result.tips.map((tip: string, i: number) => (
                 <div key={i}>• {tip}</div>
               ))}
-              <div className="pt-2 text-[10px] text-slate-500">
+              <div className="pt-2 text-[10px] text-[#6b7d75]">
                 Self-assessment only, not a medical diagnosis.
               </div>
             </div>

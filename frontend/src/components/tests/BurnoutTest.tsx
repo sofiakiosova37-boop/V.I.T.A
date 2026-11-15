@@ -7,6 +7,10 @@ interface Question {
   title: string;
 }
 
+interface BurnoutResult {
+  tips: string[];
+}
+
 const OPTIONS = [
   { text: "Never", score: 0 },
   { text: "A few times per year", score: 1 },
@@ -48,9 +52,9 @@ const sectionBQuestions: Question[] = SECTION_B_TEXTS.map((text, i) => ({
   title: `${i + 1}. ${text}`,
 }));
 
-const LOW = "text-emerald-400 border-emerald-800 bg-emerald-950/40";
-const MID = "text-yellow-400 border-yellow-800 bg-yellow-950/40";
-const HIGH = "text-red-400 border-red-800 bg-red-950/40";
+const LOW = "text-[#35634e] border-[#b6d3c2] bg-[#dcebe2]";
+const MID = "text-[#8f621d] border-[#e4cfa3] bg-[#f5e7ce]";
+const HIGH = "text-[#9b3d30] border-[#e2b6ae] bg-[#f4dcd7]";
 
 const interpretA = (score: number) =>
   score <= 17
@@ -91,32 +95,32 @@ const Section: React.FC<SectionProps> = ({
   const interpretation = interpret(total);
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-6 space-y-6">
+    <div className="space-y-5 rounded-2xl border border-[#dce3dc] bg-[#fcfbf7] p-6 shadow-xs">
       <div>
-        <div className="flex justify-between items-center mb-1">
-          <h4 className="text-sm font-bold text-teal-400">{title}</h4>
-          <span className="text-xs text-slate-400">
+        <div className="mb-1 flex items-center justify-between">
+          <h4 className="text-sm font-bold text-[#3f6656]">{title}</h4>
+          <span className="text-xs font-semibold text-[#6b7d75]">
             Question {index + 1} of {questions.length}
           </span>
         </div>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-[#6b7d75]">
           Choose the response that best corresponds to how you feel.
         </p>
       </div>
 
       {!isFinished || (!hasAnswered && isLast) ? (
-        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-5 space-y-4">
-          <h5 className="text-sm font-semibold text-slate-200">{current.title}</h5>
-          <div className="space-y-2.5">
+        <div className="space-y-4 rounded-xl border border-[#e3e6dd] bg-[#f3f2ea] p-5">
+          <h5 className="text-sm font-bold text-[#2b3a34]">{current.title}</h5>
+          <div className="space-y-2">
             {OPTIONS.map((opt) => {
               const isSelected = answers[current.id] === opt.score;
               return (
                 <label
                   key={opt.score}
-                  className={`flex items-start gap-3 p-3 rounded-lg border text-xs cursor-pointer transition-all ${
+                  className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-xs transition-all ${
                     isSelected
-                      ? "border-teal-500 bg-teal-950/30 text-white"
-                      : "border-slate-800 bg-slate-900/50 text-slate-300 hover:border-slate-700 hover:bg-slate-900"
+                      ? "border-[#587e6e] bg-[#eaf0eb] font-bold text-[#2b3a34] shadow-2xs"
+                      : "border-[#dce3dc] bg-[#fcfbf7] text-[#475b52] hover:border-[#b7c7bc] hover:bg-[#f8f7f1]"
                   }`}
                 >
                   <input
@@ -124,9 +128,12 @@ const Section: React.FC<SectionProps> = ({
                     name={`q-${current.id}`}
                     checked={isSelected}
                     onChange={() =>
-                      setAnswers((prev) => ({ ...prev, [current.id]: opt.score }))
+                      setAnswers((prev) => ({
+                        ...prev,
+                        [current.id]: opt.score,
+                      }))
                     }
-                    className="mt-0.5 text-teal-600 focus:ring-teal-500 bg-slate-950 border-slate-700"
+                    className="mt-0.5 accent-[#587e6e]"
                   />
                   <span className="flex-1 leading-relaxed">{opt.text}</span>
                 </label>
@@ -134,14 +141,14 @@ const Section: React.FC<SectionProps> = ({
             })}
           </div>
 
-          <div className="flex justify-between items-center pt-2">
+          <div className="flex items-center justify-between pt-2">
             <button
               onClick={() => index > 0 && setIndex((p) => p - 1)}
               disabled={index === 0}
-              className={`rounded-xl px-4 py-2 text-xs font-semibold transition-colors ${
+              className={`rounded-xl px-4 py-2 text-xs font-bold transition-colors ${
                 index === 0
-                  ? "opacity-50 cursor-not-allowed bg-slate-800 text-slate-500"
-                  : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                  ? "cursor-not-allowed bg-[#e7e8df] text-[#9aa8a1]"
+                  : "bg-[#e7e8df] text-[#475b52] hover:bg-[#d8dcd1]"
               }`}
             >
               Back
@@ -149,10 +156,10 @@ const Section: React.FC<SectionProps> = ({
             <button
               onClick={() => hasAnswered && !isLast && setIndex((p) => p + 1)}
               disabled={!hasAnswered || isLast}
-              className={`rounded-xl px-5 py-2 text-xs font-semibold text-white transition-colors ${
+              className={`rounded-xl px-5 py-2 text-xs font-bold text-white transition-colors ${
                 !hasAnswered || isLast
-                  ? "opacity-50 cursor-not-allowed bg-teal-900/50 text-teal-300"
-                  : "bg-teal-600 hover:bg-teal-500 shadow-lg shadow-teal-950/50"
+                  ? "cursor-not-allowed bg-[#a8beb3]"
+                  : "bg-[#587e6e] shadow-xs hover:bg-[#48695b]"
               }`}
             >
               Next
@@ -162,13 +169,16 @@ const Section: React.FC<SectionProps> = ({
       ) : null}
 
       {isFinished && (
-        <div className="rounded-xl border border-slate-800 bg-slate-950 p-5 text-center space-y-2 animate-fadeIn">
-          <h5 className="text-sm font-bold text-white">Section completed</h5>
-          <div className="text-sm text-slate-300">
-            Score: <strong className="text-white text-base">{total}</strong> / 42
+        <div className="space-y-2 rounded-xl border border-[#e3e6dd] bg-[#f3f2ea] p-5 text-center">
+          <h5 className="text-sm font-bold text-[#2b3a34]">
+            Section completed
+          </h5>
+          <div className="text-sm text-[#475b52]">
+            Score: <strong className="text-base text-[#2b3a34]">{total}</strong>{" "}
+            / 42
           </div>
           <div
-            className={`text-xs px-3 py-2 rounded-lg border inline-block font-medium ${interpretation.color}`}
+            className={`inline-block rounded-lg border px-3 py-2 text-xs font-bold ${interpretation.color}`}
           >
             {interpretation.text}
           </div>
@@ -184,7 +194,7 @@ export const BurnoutTest: React.FC<SingleTestProps> = ({
 }) => {
   const [answersA, setAnswersA] = useState<Record<number, number>>({});
   const [answersB, setAnswersB] = useState<Record<number, number>>({});
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<BurnoutResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -198,9 +208,10 @@ export const BurnoutTest: React.FC<SingleTestProps> = ({
       setError("Please sign in first.");
       return;
     }
-    const answers = [...Object.entries(answersA), ...Object.entries(answersB)].map(
-      ([id, value]) => ({ question_id: Number(id), value }),
-    );
+    const answers = [
+      ...Object.entries(answersA),
+      ...Object.entries(answersB),
+    ].map(([id, value]) => ({ question_id: Number(id), value }));
 
     setSaving(true);
     try {
@@ -223,11 +234,14 @@ export const BurnoutTest: React.FC<SingleTestProps> = ({
   };
 
   return (
-    <div className="space-y-8 max-w-xl mx-auto">
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-6 text-center">
-        <h3 className="text-lg font-bold text-white">🔥 Burnout self-check</h3>
-        <p className="text-xs text-slate-400 mt-1">
-          Complete both sections below to assess different dimensions of burnout.
+    <div className="mx-auto max-w-xl space-y-6">
+      <div className="rounded-2xl border border-[#d5dfd7] bg-[#eaf0eb]/70 p-6 text-center shadow-2xs">
+        <h3 className="text-lg font-bold text-[#2b3a34]">
+          🔥 Burnout self-check
+        </h3>
+        <p className="mt-1 text-xs text-[#586b63]">
+          Complete both sections below to assess different dimensions of
+          burnout.
         </p>
       </div>
 
@@ -248,24 +262,28 @@ export const BurnoutTest: React.FC<SingleTestProps> = ({
       />
 
       {isFinishedA && isFinishedB && (
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-6 space-y-4 text-center">
-          <h4 className="text-sm font-bold text-white">Both sections completed</h4>
+        <div className="space-y-4 rounded-2xl border border-[#dce3dc] bg-[#fcfbf7] p-6 text-center shadow-xs">
+          <h4 className="text-sm font-bold text-[#2b3a34]">
+            Both sections completed
+          </h4>
           <button
             onClick={handleSubmit}
             disabled={saving || result !== null}
-            className="rounded-xl bg-teal-600 px-6 py-2.5 text-xs font-semibold text-white hover:bg-teal-500 disabled:opacity-50 transition-colors"
+            className="rounded-xl bg-[#587e6e] px-6 py-2.5 text-xs font-bold text-white shadow-xs transition-colors hover:bg-[#48695b] disabled:opacity-50"
           >
             {saving ? "Saving..." : result ? "Saved" : "Save burnout result"}
           </button>
 
-          {error && <div className="text-xs text-red-400">{error}</div>}
+          {error && (
+            <div className="text-xs font-semibold text-[#9b3d30]">{error}</div>
+          )}
 
           {result && (
-            <div className="text-xs text-slate-300 space-y-1 text-left">
+            <div className="space-y-1.5 rounded-xl border border-[#e3e6dd] bg-[#f3f2ea] p-4 text-left text-xs text-[#475b52]">
               {result.tips.map((tip: string, i: number) => (
                 <div key={i}>• {tip}</div>
               ))}
-              <div className="pt-2 text-[10px] text-slate-500">
+              <div className="pt-2 text-[10px] text-[#6b7d75]">
                 Self-assessment only, not a medical diagnosis.
               </div>
             </div>
