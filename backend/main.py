@@ -60,9 +60,9 @@ def submit_burnout():
     user_id = get_user_id(data)
     answers = valid_answers(data, 14, 6)
     if user_id is None or answers is None:
-        return error("Неверные данные", 400)
+        return error("Invalid data", 400)
     if too_soon(user_id, "burnout"):
-        return error("Тест можно проходить раз в неделю", 409)
+        return error("Test can be taken once a week", 409)
     result = calculate_exhaustion(answers)
     db.save_result(user_id, "burnout", result)
     return jsonify(result)
@@ -77,9 +77,9 @@ def submit_mood():
     user_id = get_user_id(data)
     answers = valid_answers(data, 21, 3)
     if user_id is None or answers is None:
-        return error("Неверные данные", 400)
+        return error("Invalid data", 400)
     if too_soon(user_id, "mood"):
-        return error("Тест можно проходить раз в неделю", 409)
+        return error("Test can be taken once a week", 409)
     result = calculate_depression(answers)
     db.save_result(user_id, "mood", result)
     return jsonify(result)
@@ -103,22 +103,22 @@ def submit_sleep():
     data = request.get_json(silent=True) or {}
     user_id = get_user_id(data)
     if user_id is None:
-        return error("Неверные данные", 400)
+        return error("Invalid data", 400)
 
     d = {}
     for field, (low, high) in SLEEP_RANGES.items():
         try:
             value = float(data[field]) if field == "hours" else int(data[field])
         except (KeyError, TypeError, ValueError):
-            return error(f"Неверное поле: {field}", 400)
+            return error(f"Invalid field: {field}", 400)
         if not low <= value <= high:
-            return error(f"Неверное поле: {field}", 400)
+            return error(f"Invalid field: {field}", 400)
         d[field] = value
     for flag in SLEEP_FLAGS:
         d[flag] = bool(data.get(flag, False))
 
     if too_soon(user_id, "sleep"):
-        return error("Сегодня вы уже заполняли дневник сна", 409)
+        return error("Test can be taken once a week", 409)
 
     result = calculate_sleep(d)
     db.save_result(user_id, "sleep", {**d, **result})
@@ -129,15 +129,20 @@ def submit_sleep():
 def sleep_history(user_id):
     return jsonify(db.get_history(user_id, "sleep"))
 
-
 @app.get("/tests/sleep/summary/<int:user_id>")
 def sleep_summary(user_id):
     last7 = db.get_history(user_id, "sleep")[-7:]
     if not last7:
-        return jsonify({"days": 0, "avg_hours": None, "avg_score": None})
+        return jsonify({
+            "days": 0, 
+            "avg_hours": None, 
+            "avg_quality": None, 
+            "avg_score": None
+        })
     return jsonify({
         "days": len(last7),
         "avg_hours": round(sum(r["hours"] for r in last7) / len(last7), 1),
+        "avg_quality": round(sum(r["quality"] for r in last7) / len(last7), 1),
         "avg_score": round(sum(r["score"] for r in last7) / len(last7)),
     })
 

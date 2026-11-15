@@ -23,6 +23,7 @@ export interface TestSummary {
   burnoutPercent?: number; // 0-100%
   sleepIndex?: number; // 0-100%
   reactionMs?: number; // ms
+  memoryScore?: number;
 }
 
 export interface ExerciseItem {
@@ -33,3 +34,10 @@ export interface ExerciseItem {
   category: "Cardio" | "Back & Posture" | "Relaxation";
   completed: boolean;
 }
+
+export interface PetStats {
+  energy: number;  
+  love: number;    
+  joy: number;     
+}
+
