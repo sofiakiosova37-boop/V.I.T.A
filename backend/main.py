@@ -1,16 +1,189 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+#from pydantic import BaseModel, Field
 
 from datetime import datetime, timedelta
-from typing import List
+#from typing import List
+from flask import Flask, jsonify, request
+from flask_cors import CORS
 
-from routers import registration
+from routers.registration import bp as registration_bp
 import database as db
 from burnscoring import calculate_exhaustion
 from sleep_scoring import calculate_sleep
 from depressionscoring import calculate_depression
+from reaction_scoring import calculate_reaction
 
+app = Flask(__name__)
+CORS(app) 
+app.register_blueprint(registration_bp) 
+
+def error(message, code):
+    return jsonify({"detail": message}), code
+
+def too_soon(user_id, test_type):
+    last = db.last_result_date(user_id, test_type)
+    if not last:
+        return False
+    if test_type == "sleep":
+        return last.date() == datetime.utcnow().date()
+    return datetime.utcnow() - last < timedelta(days=7)
+
+def valid_answers(data, expected_count, max_value):
+    answers = data.get("answers")
+    if not isinstance(answers, list):
+        return None
+    try:
+        parsed = [
+            {"question_id": int(a["question_id"]), "value": int(a["value"])}
+            for a in answers
+        ]
+    except (KeyError, TypeError, ValueError):
+        return None
+    ids = sorted(a["question_id"] for a in parsed)
+    if ids != list(range(1, expected_count + 1)):
+        return None
+    if any(not 0 <= a["value"] <= max_value for a in parsed):
+        return None
+    return parsed
+
+def get_user_id(data):
+    try:
+        return int(data["user_id"])
+    except (KeyError, TypeError, ValueError):
+        return None
+
+@app.post("/tests/burnout/submit")
+def submit_burnout():
+    data = request.get_json(silent=True) or {}
+    user_id = get_user_id(data)
+    answers = valid_answers(data, 14, 6)
+    if user_id is None or answers is None:
+        return error("Неверные данные", 400)
+    if too_soon(user_id, "burnout"):
+        return error("Тест можно проходить раз в неделю", 409)
+    result = calculate_exhaustion(answers)
+    db.save_result(user_id, "burnout", result)
+    return jsonify(result)
+
+@app.get("/tests/burnout/history/<int:user_id>")
+def burnout_history(user_id):
+    return jsonify(db.get_history(user_id, "burnout"))
+
+@app.post("/tests/mood/submit")
+def submit_mood():
+    data = request.get_json(silent=True) or {}
+    user_id = get_user_id(data)
+    answers = valid_answers(data, 21, 3)
+    if user_id is None or answers is None:
+        return error("Неверные данные", 400)
+    if too_soon(user_id, "mood"):
+        return error("Тест можно проходить раз в неделю", 409)
+    result = calculate_depression(answers)
+    db.save_result(user_id, "mood", result)
+    return jsonify(result)
+
+
+@app.get("/tests/mood/history/<int:user_id>")
+def mood_history(user_id):
+    return jsonify(db.get_history(user_id, "mood"))
+
+SLEEP_RANGES = {
+    "hours": (0, 16),
+    "quality": (1, 5),
+    "rested": (1, 5),
+    "minutes_to_fall_asleep": (0, 300),
+    "night_awakenings": (0, 10),
+}
+SLEEP_FLAGS = ["bright_light", "noise", "temperature", "devices_before_bed", "food_or_caffeine"]
+
+@app.post("/tests/sleep/submit")
+def submit_sleep():
+    data = request.get_json(silent=True) or {}
+    user_id = get_user_id(data)
+    if user_id is None:
+        return error("Неверные данные", 400)
+
+    d = {}
+    for field, (low, high) in SLEEP_RANGES.items():
+        try:
+            value = float(data[field]) if field == "hours" else int(data[field])
+        except (KeyError, TypeError, ValueError):
+            return error(f"Неверное поле: {field}", 400)
+        if not low <= value <= high:
+            return error(f"Неверное поле: {field}", 400)
+        d[field] = value
+    for flag in SLEEP_FLAGS:
+        d[flag] = bool(data.get(flag, False))
+
+    if too_soon(user_id, "sleep"):
+        return error("Сегодня вы уже заполняли дневник сна", 409)
+
+    result = calculate_sleep(d)
+    db.save_result(user_id, "sleep", {**d, **result})
+    return jsonify(result)
+
+
+@app.get("/tests/sleep/history/<int:user_id>")
+def sleep_history(user_id):
+    return jsonify(db.get_history(user_id, "sleep"))
+
+
+@app.get("/tests/sleep/summary/<int:user_id>")
+def sleep_summary(user_id):
+    last7 = db.get_history(user_id, "sleep")[-7:]
+    if not last7:
+        return jsonify({"days": 0, "avg_hours": None, "avg_score": None})
+    return jsonify({
+        "days": len(last7),
+        "avg_hours": round(sum(r["hours"] for r in last7) / len(last7), 1),
+        "avg_score": round(sum(r["score"] for r in last7) / len(last7)),
+    })
+
+@app.get("/reminders/<int:user_id>")
+def reminders(user_id):
+    return jsonify({
+        "sleep_due": not too_soon(user_id, "sleep"),
+        "burnout_due": not too_soon(user_id, "burnout"),
+        "mood_due": not too_soon(user_id, "mood"),
+    })
+
+@app.post("/tests/reaction/submit")
+def submit_reaction():
+    data = request.get_json(silent=True) or {}
+    user_id = get_user_id(data)
+    attempts = data.get("attempts")
+    if user_id is None or not isinstance(attempts, list) or len(attempts) != 5:
+        return error("Invalid data", 400)
+    try:
+        attempts = [int(x) for x in attempts]
+    except (TypeError, ValueError):
+        return error("Invalid data", 400)
+    if any(not 100 <= x <= 3000 for x in attempts):
+        return error("Invalid reaction times", 400)
+
+    previous = [r["avg_ms"] for r in db.get_history(user_id, "reaction")]
+    result = calculate_reaction(attempts, previous)
+    db.save_result(user_id, "reaction", result)
+    return jsonify(result)
+
+@app.get("/tests/reaction/history/<int:user_id>")
+def reaction_history(user_id):
+    return jsonify(db.get_history(user_id, "reaction"))
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
+
+
+
+
+
+
+
+
+"""
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -43,8 +216,8 @@ def submit(data: Submission):
     if len(data.answers) != 22 or any(not 0 <= a.value <= 6 for a in data.answers):
         raise HTTPException(400, "Incorrect answers")
     result = calculate_exhaustion([a.dict() for a in data.answers])
-    db.save_result(data.user_id, "burnout", {"sections": result})
-    return {"sections": result}
+    db.save_result(data.user_id, "burnout", result)
+    return result
 
 @app.get("/tests/burnout/history/{user_id}")
 def history(user_id: int):
@@ -109,7 +282,6 @@ def sleep_summary(user_id: int):
 
 
 
-"""
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field

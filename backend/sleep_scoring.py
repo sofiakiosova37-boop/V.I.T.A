@@ -1,4 +1,4 @@
-# (условие, совет)
+
 TIP_RULES = [
     (lambda d: d["hours"] < 7, "You are sleeping less than 7 hours, which has a negative impact on your health. Try dimming the lights half an hour before bedtime and putting away all electronic devices."),
     (lambda d: d["hours"] > 10, "You might be sleeping too long. Consult with your doctor and try to maintain a consistent sleep schedule."),
