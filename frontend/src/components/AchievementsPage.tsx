@@ -1,9 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { get } from "../services/api";
-
-interface Props {
-  userId?: number;
-}
+import React, { useState, useEffect } from "react";
 
 interface Achievement {
   id: number;
@@ -16,68 +11,64 @@ interface Achievement {
 const ACHIEVEMENTS_DATA: Achievement[] = [
   {
     id: 1,
-    title: 'First Steps',
-    description: 'Complete your first test in V.I.T.A.',
+    title: "First Steps",
+    description: "Complete your first test in V.I.T.A.",
     requiredTests: 1,
-    iconUrl: '/achievements/bronze.png',
+    iconUrl: "/achievements/bronze.png",
   },
   {
     id: 2,
-    title: 'Space Explorer',
-    description: 'Complete 3 tests.',
+    title: "Space Explorer",
+    description: "Complete 3 tests.",
     requiredTests: 3,
-    iconUrl: '/achievements/silver.png',
+    iconUrl: "/achievements/silver.png",
   },
   {
     id: 3,
-    title: 'Safety Expert',
-    description: 'Complete 5 tests.',
+    title: "Safety Expert",
+    description: "Complete 5 tests.",
     requiredTests: 5,
-    iconUrl: '/achievements/gold.png',
+    iconUrl: "/achievements/gold.png",
   },
   {
     id: 4,
-    title: 'Crew Veteran',
-    description: 'Complete 10 tests.',
+    title: "Crew Veteran",
+    description: "Complete 10 tests.",
     requiredTests: 10,
-    iconUrl: '/achievements/super.png',
+    iconUrl: "/achievements/super.png",
   },
 ];
 
-export const AchievementsPage: React.FC<Props> = ({ userId }) => {
+export const AchievementsPage: React.FC = () => {
   const [completedTests, setCompletedTests] = useState<number>(0);
-  const [streak, setStreak] = useState<number>(0);
 
   useEffect(() => {
-    if (!userId) return;
-    get(`/achievements/${userId}`)
-      .then(({ ok, data }) => {
-        if (ok) {
-          setCompletedTests(data.completed_tests);
-          setStreak(data.streak_days);
-        }
-      })
-      .catch(() => {
-        // сервер недоступен: остаются нули
-      });
-  }, [userId]);
+    const updateCompletedCount = () => {
+      const saved = localStorage.getItem("vita_completed_tests");
+      setCompletedTests(saved ? parseInt(saved, 10) : 0);
+    };
+
+    updateCompletedCount();
+
+    window.addEventListener("storage", updateCompletedCount);
+    return () => window.removeEventListener("storage", updateCompletedCount);
+  }, []);
 
   return (
-    <div className="mx-auto max-w-4xl p-6 text-slate-100 font-sans">
-      <header className="mb-10 text-center">
-        <h1 className="text-3xl font-extrabold mb-3 bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">
+    <div className="mx-auto max-w-4xl p-4 text-[#2b3a34]">
+      <header className="mb-8 rounded-2xl border border-[#d5dfd7] bg-[#eaf0eb]/70 p-6 text-center">
+        <h1 className="mb-2 text-2xl font-bold text-[#2f5243]">
           V.I.T.A. Achievements System
         </h1>
-        <p className="text-sm text-slate-400">
-          Complete the required number of tests to unlock unique crew achievements.
+        <p className="text-xs text-[#586b63]">
+          Complete the required number of tests to unlock unique crew
+          achievements.
         </p>
 
-        <div className="mt-5 inline-flex items-center gap-6 rounded-xl border border-slate-800 bg-slate-900/80 px-6 py-3 backdrop-blur">
-          <span className="text-sm">
-            Completed tests: <strong className="text-teal-300">{completedTests}</strong>
-          </span>
-          <span className="text-sm">
-            🔥 Streak: <strong className="text-teal-300">{streak}</strong> days
+        <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-[#c8d6cc] bg-[#fcfbf7] px-5 py-2 shadow-2xs">
+          <span className="text-xs font-semibold text-[#475b52]">
+            Completed tests:{" "}
+            <strong className="text-[#3f6656]">{completedTests}</strong>
           </span>
         </div>
       </header>
@@ -95,38 +86,42 @@ export const AchievementsPage: React.FC<Props> = ({ userId }) => {
               key={item.id}
               className={`flex items-center gap-5 rounded-2xl border p-5 transition-all duration-200 ${
                 isUnlocked
-                  ? "border-purple-500/40 bg-slate-900/90 shadow-lg shadow-purple-500/10 hover:-translate-y-1"
-                  : "border-slate-800/80 bg-slate-950/60 opacity-80"
+                  ? "border-[#9eb8a9] bg-[#fcfbf7] shadow-sm hover:-translate-y-0.5"
+                  : "border-[#e2e5dc] bg-[#f3f2ea]/80 opacity-85"
               }`}
             >
-              <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border border-slate-700 bg-slate-900 flex items-center justify-center">
+              <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#c8d6cc] bg-[#eaf0eb]">
                 <img
                   src={item.iconUrl}
                   alt={item.title}
                   className={`h-full w-full object-cover ${
-                    !isUnlocked ? "grayscale brightness-40" : ""
+                    !isUnlocked ? "grayscale opacity-50" : ""
                   }`}
                 />
                 {!isUnlocked && (
-                  <div className="absolute inset-0 flex items-center justify-center text-lg bg-black/40">
+                  <div className="absolute inset-0 flex items-center justify-center bg-[#f6f4ec]/55 text-lg">
                     🔒
                   </div>
                 )}
               </div>
 
               <div className="flex-1">
-                <h3 className="mb-1 text-base font-bold text-white">{item.title}</h3>
-                <p className="mb-3 text-xs text-slate-400">{item.description}</p>
+                <h3 className="mb-1 text-base font-bold text-[#2b3a34]">
+                  {item.title}
+                </h3>
+                <p className="mb-3 text-xs text-[#6b7d75]">
+                  {item.description}
+                </p>
 
                 <div className="flex items-center gap-3">
-                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-800">
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#e3e6dd]">
                     <div
-                      className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300"
+                      className="h-full rounded-full bg-[#587e6e] transition-all duration-300"
                       style={{ width: `${isUnlocked ? 100 : progress}%` }}
                     ></div>
                   </div>
-                  <span className="text-[11px] text-slate-400 min-w-[35px] text-right">
-                    {Math.min(completedTests, item.requiredTests)} / {item.requiredTests}
+                  <span className="min-w-[35px] text-right text-[11px] font-bold text-[#497261]">
+                    {completedTests} / {item.requiredTests}
                   </span>
                 </div>
               </div>

@@ -29,7 +29,7 @@ export const TestsTab: React.FC<TestsTabProps> = ({
     },
     {
       id: "burnout" as const,
-      title: "🔋 Burnout Assessment",
+      title: "🔥 Burnout Assessment",
       badge:
         summary.burnoutPercent !== undefined
           ? `${summary.burnoutPercent} pts`
@@ -56,22 +56,33 @@ export const TestsTab: React.FC<TestsTabProps> = ({
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setSelectedTest(tab.id)}
-            className={`flex flex-col items-start rounded-2xl border p-4 text-left transition ${
-              selectedTest === tab.id
-                ? "border-teal-400 bg-teal-950/30 text-white"
-                : "border-slate-800 bg-slate-900/80 text-slate-300 hover:border-slate-700"
-            }`}
-          >
-            <span className="text-sm font-bold">{tab.title}</span>
-            <span className="mt-2 rounded-full bg-slate-800 px-2.5 py-0.5 text-xs text-teal-300">
-              {tab.badge}
-            </span>
-          </button>
-        ))}
+        {tabs.map((tab) => {
+          const isSelected = selectedTest === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setSelectedTest(tab.id)}
+              className={`flex flex-col items-start rounded-2xl border p-4 text-left transition-all ${
+                isSelected
+                  ? "border-[#587e6e] bg-[#eaf0eb] text-[#2b3a34] shadow-xs ring-1 ring-[#9eb8a9]"
+                  : "border-[#dce3dc] bg-[#fcfbf7] text-[#586b63] hover:border-[#b7c7bc] hover:bg-[#f3f2ea]"
+              }`}
+            >
+              <span className="text-sm font-bold text-[#2b3a34]">
+                {tab.title}
+              </span>
+              <span
+                className={`mt-2 rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                  isSelected
+                    ? "bg-[#587e6e] text-white"
+                    : "bg-[#eaf0eb] text-[#3f6656]"
+                }`}
+              >
+                {tab.badge}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {selectedTest === "depression" && (
@@ -86,7 +97,9 @@ export const TestsTab: React.FC<TestsTabProps> = ({
         <BurnoutTest
           userId={2}
           savedResult={summary.burnoutPercent}
-          onSaveResult={(percent) => onUpdateSummary({ burnoutPercent: percent })}
+          onSaveResult={(percent) =>
+            onUpdateSummary({ burnoutPercent: percent })
+          }
         />
       )}
 
@@ -95,7 +108,7 @@ export const TestsTab: React.FC<TestsTabProps> = ({
           userId={2}
           savedResult={summary.sleepIndex}
           onSaveResult={(index) => onUpdateSummary({ sleepIndex: index })}
-/>
+        />
       )}
 
       {selectedTest === "reaction" && (
