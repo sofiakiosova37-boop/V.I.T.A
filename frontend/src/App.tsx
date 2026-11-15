@@ -3,6 +3,7 @@ import { DashboardTab } from "./components/DashboardTab";
 import { HistoryAndScheduleTab } from "./components/HistoryAndScheduleTab";
 import { TestsTab } from "./components/tests/TestsTab";
 import { VitaLogo } from "./components/VitaLogo";
+import { VirtualPet } from './components/VirtualPet';
 import {
   ExerciseItem,
   TestSummary,
@@ -298,6 +299,7 @@ export function App() {
           )}
         </main>
       </div>
+      <VirtualPet />
     </div>
   );
 }
