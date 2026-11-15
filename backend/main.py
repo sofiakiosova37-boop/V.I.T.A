@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 #from pydantic import BaseModel, Field
+from achievements import build_achievements
 
 from datetime import datetime, timedelta
 #from typing import List
@@ -171,6 +172,9 @@ def submit_reaction():
 def reaction_history(user_id):
     return jsonify(db.get_history(user_id, "reaction"))
 
+@app.get("/achievements/<int:user_id>")
+def achievements(user_id):
+    return jsonify(build_achievements(db.get_all_results(user_id)))
 
 if __name__ == "__main__":
     app.run(debug=True)

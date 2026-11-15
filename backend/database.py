@@ -65,3 +65,12 @@ def get_history(user_id, test_type):
     ).fetchall()
     conn.close()
     return [{"created_at": r["created_at"], **json.loads(r["details"])} for r in rows]
+
+def get_all_results(user_id):
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT test_type, created_at FROM test_results WHERE user_id = ? ORDER BY id",
+        (user_id,),
+    ).fetchall()
+    conn.close()
+    return [(r["test_type"], datetime.fromisoformat(r["created_at"])) for r in rows]

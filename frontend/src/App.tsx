@@ -226,7 +226,7 @@ export function App() {
             />
           )}
 
-          {activeTab === "achievements" && <AchievementsPage />}
+          {activeTab === "achievements" && <AchievementsPage userId={2} />}
 
           {activeTab === "profile" && (
             <div className="max-w-lg space-y-4 rounded-2xl border border-slate-800 bg-slate-900/90 p-6">
