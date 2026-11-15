@@ -1,3 +1,14 @@
+SLEEP_TIPS = {
+    "good": {
+        "fact": "Did you know that astronauts sleep vertically in sleeping bags tied to the walls?",
+    },
+    "attention": {
+        "fact": "To improve sleep aboard the ISS—where there are 16 sunrises every 24 hours—special devices are used to regulate light. Would you like to try this too?",
+    },
+    "poor": {
+        "fact": "To facilitate adaptation and help regulate circadian rhythms, astronauts may take melatonin.",
+    }
+}
 
 TIP_RULES = [
     (lambda d: d["hours"] < 7, "You are sleeping less than 7 hours, which has a negative impact on your health. Try dimming the lights half an hour before bedtime and putting away all electronic devices."),
@@ -33,4 +44,9 @@ def calculate_sleep(d):
         + awake
     )
     zone = "good" if score >= 70 else "attention" if score >= 40 else "poor"
-    return {"score": score, "zone": zone, "tips": build_tips(d)}
+    return {
+        "score": score, 
+        "zone": zone, 
+        "fact": SLEEP_TIPS[zone]["fact"],  
+        "tips": build_tips(d)               
+    }

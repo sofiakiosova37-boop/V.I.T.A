@@ -4,13 +4,15 @@ import { BurnoutTest } from "./BurnoutTest";
 import { DepressionTest } from "./DepressionTest";
 import { ReactionTest } from "./ReactionTest";
 import { SleepTest } from "./SleepTest";
+import {TwoBackTest} from "./MemoryTest";
+import { saveTestResult } from "../../services/api";
 
 interface TestsTabProps {
   summary: TestSummary;
   onUpdateSummary: (updated: Partial<TestSummary>) => void;
 }
 
-type ActiveTest = "depression" | "burnout" | "sleep" | "reaction";
+type ActiveTest = "depression" | "burnout" | "sleep" | "reaction" | "memory";
 
 export const TestsTab: React.FC<TestsTabProps> = ({
   summary,
@@ -51,6 +53,13 @@ export const TestsTab: React.FC<TestsTabProps> = ({
           ? `${summary.reactionMs} ms`
           : "Not taken",
     },
+    {
+      id: "memory" as const,
+      title: "🧠 Working Memory (2-Back)",
+      badge: summary.memoryScore !== undefined 
+        ? `${summary.memoryScore} pts` 
+        : "Not taken",
+},
   ];
 
   return (
@@ -116,6 +125,20 @@ export const TestsTab: React.FC<TestsTabProps> = ({
           userId={2}
           savedResult={summary.reactionMs}
           onSaveResult={(ms) => onUpdateSummary({ reactionMs: ms })}
+        />
+      )}
+
+      {selectedTest === "memory" && (
+        <TwoBackTest 
+          savedResult={summary.memoryScore}
+          onSaveResult={async (score) => {
+            onUpdateSummary({ memoryScore: score });
+            try {
+              await saveTestResult({ memoryScore: score });
+            } catch (e) {
+              console.error("Failed to sync memory score with backend", e);
+            }
+          }} 
         />
       )}
     </div>
