@@ -232,6 +232,7 @@ export const DepressionTest: React.FC<SingleTestProps> = ({
   const currentQuestion = questions[currentIndex];
   const isLastQuestion = currentIndex === questions.length - 1;
   const hasAnsweredCurrent = answers[currentQuestion?.id] !== undefined;
+  const [saving, setSaving] = useState(false);
 
   const handleOptionSelect = (questionId: number, score: number) => {
     setAnswers((prev) => ({
@@ -256,26 +257,33 @@ export const DepressionTest: React.FC<SingleTestProps> = ({
   const isFinished = Object.keys(answers).length === questions.length;
 
   const handleSubmitResult = async () => {
-    try {
-      const formattedAnswers = Object.entries(answers).map(([qId, score]) => ({
-        question_id: Number(qId),
-        value: score,
-      }));
-      const { ok, status, data } = await post("/tests/depression/submit", {
-        user_id: userId,
-        answers: formattedAnswers, 
-      });
-      if (!ok) {
-        setError(data.detail ?? "Не удалось сохранить результат.");
-        return;
-      }
-      setError(null);
-      setResult(data);
-      onSaveResult?.(data.total_score ?? totalScore);
-    } catch {
-      setError("Нет связи с сервером. Запущен ли бэкенд?");
+  if (!userId) {
+    setError("Please sign in first.");
+    return;
+  }
+  setSaving(true);
+  try {
+    const formattedAnswers = Object.entries(answers).map(([qId, score]) => ({
+      question_id: Number(qId),
+      value: score,
+    }));
+    const { ok, data } = await post("/tests/mood/submit", {
+      user_id: userId,
+      answers: formattedAnswers,
+    });
+    if (!ok) {
+      setError(data.detail ?? "Could not save the result.");
+      return;
     }
-  };
+    setError(null);
+    setResult(data);
+    onSaveResult?.(data.score);
+  } catch {
+    setError("No connection to the server. Is the backend running?");
+  } finally {
+    setSaving(false);
+  }
+};
 
   const getInterpretation = (score: number) => {
     if (score <= 13) {
@@ -375,7 +383,7 @@ export const DepressionTest: React.FC<SingleTestProps> = ({
         </div>
       ) : null}
 
-      {isFinished && (
+       {isFinished && (
         <div className="rounded-xl border border-slate-800 bg-slate-950 p-5 space-y-4 animate-fadeIn">
           <div className="text-center space-y-2">
             <h4 className="text-sm font-bold text-white">Test Completed!</h4>
@@ -387,21 +395,37 @@ export const DepressionTest: React.FC<SingleTestProps> = ({
             </div>
           </div>
 
+          {(result?.self_harm_alert || (answers[8] ?? 0) >= 1) && (
+            <div className="rounded-lg border border-red-800 bg-red-950/40 p-4 text-xs leading-relaxed text-red-200">
+              {result?.support_message ??
+                "You noted thoughts of harming yourself. Thank you for answering honestly. You do not have to cope with this alone: please talk today to someone you trust, a doctor or a mental health professional. If you are in immediate danger, call your local emergency number."}
+            </div>
+          )}
+
           <div className="flex justify-center pt-2">
             <button
               onClick={handleSubmitResult}
-              className="rounded-xl bg-teal-600 px-6 py-2.5 text-xs font-semibold text-white hover:bg-teal-500 transition-colors shadow-lg shadow-teal-950/50"
+              disabled={saving || result !== null}
+              className="rounded-xl bg-teal-600 px-6 py-2.5 text-xs font-semibold text-white hover:bg-teal-500 disabled:opacity-50 transition-colors shadow-lg shadow-teal-950/50"
             >
-              Save Result
+              {saving ? "Saving..." : result ? "Saved" : "Save Result"}
             </button>
           </div>
+
           {error && <div className="text-xs text-red-400 text-center">{error}</div>}
+
           {result && (
             <div className="text-xs text-slate-300 space-y-1 text-left">
-              <div>Результат успешно сохранен на сервере!</div>
+              {result.tips.map((tip: string, i: number) => (
+                <div key={i}>• {tip}</div>
+              ))}
+              <div className="pt-2 text-[10px] text-slate-500">
+                Self-assessment only, not a medical diagnosis.
+              </div>
             </div>
           )}
         </div>
       )}
-        </div>
-      )}
+    </div>
+  );
+};

@@ -86,9 +86,7 @@ export const TestsTab: React.FC<TestsTabProps> = ({
         <BurnoutTest
           userId={2}
           savedResult={summary.burnoutPercent}
-          onSaveResult={(percent) =>
-            onUpdateSummary({ burnoutPercent: percent })
-          }
+          onSaveResult={(percent) => onUpdateSummary({ burnoutPercent: percent })}
         />
       )}
 
@@ -97,7 +95,7 @@ export const TestsTab: React.FC<TestsTabProps> = ({
           userId={2}
           savedResult={summary.sleepIndex}
           onSaveResult={(index) => onUpdateSummary({ sleepIndex: index })}
-        />
+/>
       )}
 
       {selectedTest === "reaction" && (

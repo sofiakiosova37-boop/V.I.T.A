@@ -17,7 +17,7 @@ def build_tips(d):
     return tips[:4] or ["Great sleep! Keep up the good work."]
 
 def duration_points(hours):
-    for low, high, pts in [(7, 9, 40), (6, 10, 30), (5, 99, 20), (4, 99, 10)]:
+    for low, high, pts in [(7, 9, 40), (6, 10, 30), (5, 6, 20), (4, 5, 10)]:
         if low <= hours <= high:
             return pts
     return 0

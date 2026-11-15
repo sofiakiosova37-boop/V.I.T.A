@@ -22,15 +22,15 @@ def level_c(score):
     return "low" """
 
 TIPS_A = {
-    "low": "exhaustion is low. Continue with your current sleep and rest routine.",
-    "moderate": "There are signs of accumulated fatigue. Take a break, get some rest, and reduce the workload where possible.",
-    "high": "The level of exhaustion is high. Talk to someone on the team or a specialist, and don't delay rest.",
+    "low": "exhaustion is low. Continue with your current sleep and rest routine. Remember, that it is not replacment for professional help if you feel that you need it.",
+    "moderate": "There are signs of accumulated fatigue. Take a break, get some rest, and reduce the workload where possible. Remember, that it is not replacment for professional help if you feel that you need it.",
+    "high": "The level of exhaustion is high. Talk to someone on the team or a specialist, and don't delay rest. Remember, that it is not replacment for professional help if you feel that you need it.",
 }
 
 TIPS_B = {
-    "low": "exhaustion is low. Continue with your current sleep and rest routine.",
-    "moderate": "There are signs of accumulated fatigue. Take a break, get some rest, and reduce the workload where possible.",
-    "high": "The level of exhaustion is high. Talk to someone on the team or a specialist, and don't delay rest.",
+    "low": "exhaustion is low. Continue with your current sleep and rest routine. Remember, that it is not replacment for professional help if you feel that you need it.",
+    "moderate": "There are signs of accumulated fatigue. Take a break, get some rest, and reduce the workload where possible. Remember, that it is not replacment for professional help if you feel that you need it.",
+    "high": "The level of exhaustion is high. Talk to someone on the team or a specialist, and don't delay rest. Remember, that it is not replacment for professional help if you feel that you need it.",
 }
 
 ORDER = {"low": 0, "moderate": 1, "high": 2}
