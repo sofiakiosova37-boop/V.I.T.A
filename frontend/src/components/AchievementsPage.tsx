@@ -14,35 +14,34 @@ const ACHIEVEMENTS_DATA: Achievement[] = [
     title: 'First Steps',
     description: 'Complete your first test in V.I.T.A.',
     requiredTests: 1,
-    iconUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80',
+    iconUrl: '/achievements/bronze.png',
   },
   {
     id: 2,
     title: 'Space Explorer',
     description: 'Complete 3 tests.',
     requiredTests: 3,
-    iconUrl: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=150&auto=format&fit=crop&q=80',
+    iconUrl: '/achievements/silver.png',
   },
   {
     id: 3,
     title: 'Safety Expert',
     description: 'Complete 5 tests.',
     requiredTests: 5,
-    iconUrl: 'https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=150&auto=format&fit=crop&q=80',
+    iconUrl: '/achievements/gold.png',
   },
   {
     id: 4,
     title: 'Crew Veteran',
     description: 'Complete 10 tests.',
     requiredTests: 10,
-    iconUrl: 'https://images.unsplash.com/photo-1618172193763-c511deb635ca?w=150&auto=format&fit=crop&q=80',
+    iconUrl: '/achievements/super.png',
   },
 ];
 
 export const AchievementsPage: React.FC = () => {
   const [completedTests, setCompletedTests] = useState<number>(0);
 
-  // Оновлюємо значення при відкритті сторінки та додаємо слухач для оновлення в реальному часі
   useEffect(() => {
     const updateCompletedCount = () => {
       const saved = localStorage.getItem('vita_completed_tests');
@@ -51,7 +50,6 @@ export const AchievementsPage: React.FC = () => {
 
     updateCompletedCount();
 
-    // Слухач на випадок, якщо тести завершуються в інших компонентах
     window.addEventListener('storage', updateCompletedCount);
     return () => window.removeEventListener('storage', updateCompletedCount);
   }, []);
