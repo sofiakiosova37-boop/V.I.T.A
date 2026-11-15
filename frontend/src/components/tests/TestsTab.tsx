@@ -76,6 +76,7 @@ export const TestsTab: React.FC<TestsTabProps> = ({
 
       {selectedTest === "depression" && (
         <DepressionTest
+          userId={2}
           savedResult={summary.depressionScore}
           onSaveResult={(score) => onUpdateSummary({ depressionScore: score })}
         />
@@ -83,6 +84,7 @@ export const TestsTab: React.FC<TestsTabProps> = ({
 
       {selectedTest === "burnout" && (
         <BurnoutTest
+          userId={2}
           savedResult={summary.burnoutPercent}
           onSaveResult={(percent) =>
             onUpdateSummary({ burnoutPercent: percent })
@@ -92,6 +94,7 @@ export const TestsTab: React.FC<TestsTabProps> = ({
 
       {selectedTest === "sleep" && (
         <SleepTest
+          userId={2}
           savedResult={summary.sleepIndex}
           onSaveResult={(index) => onUpdateSummary({ sleepIndex: index })}
         />
@@ -99,6 +102,7 @@ export const TestsTab: React.FC<TestsTabProps> = ({
 
       {selectedTest === "reaction" && (
         <ReactionTest
+          userId={2}
           savedResult={summary.reactionMs}
           onSaveResult={(ms) => onUpdateSummary({ reactionMs: ms })}
         />

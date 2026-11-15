@@ -1,4 +1,4 @@
-from burnoutQ import QUESTION_SECTIONS
+# from burnoutQ import QUESTION_SECTIONS
 SECTION_MAX = 42 
 
 def level_a(score):

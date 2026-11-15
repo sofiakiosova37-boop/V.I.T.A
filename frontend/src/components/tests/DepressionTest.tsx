@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { SingleTestProps } from "./testContract";
+import { post } from "../../services/api";
 
 interface Question {
   id: number;
@@ -221,11 +222,13 @@ const questions: Question[] = [
 ];
 
 export const DepressionTest: React.FC<SingleTestProps> = ({
+  userId,
   onSaveResult,
 }) => {
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [currentIndex, setCurrentIndex] = useState<number>(0);
-
+  const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
   const currentQuestion = questions[currentIndex];
   const isLastQuestion = currentIndex === questions.length - 1;
   const hasAnsweredCurrent = answers[currentQuestion?.id] !== undefined;
@@ -251,6 +254,28 @@ export const DepressionTest: React.FC<SingleTestProps> = ({
 
   const totalScore = Object.values(answers).reduce((acc, val) => acc + val, 0);
   const isFinished = Object.keys(answers).length === questions.length;
+
+  const handleSubmitResult = async () => {
+    try {
+      const formattedAnswers = Object.entries(answers).map(([qId, score]) => ({
+        question_id: Number(qId),
+        value: score,
+      }));
+      const { ok, status, data } = await post("/tests/depression/submit", {
+        user_id: userId,
+        answers: formattedAnswers, 
+      });
+      if (!ok) {
+        setError(data.detail ?? "Не удалось сохранить результат.");
+        return;
+      }
+      setError(null);
+      setResult(data);
+      onSaveResult?.(data.total_score ?? totalScore);
+    } catch {
+      setError("Нет связи с сервером. Запущен ли бэкенд?");
+    }
+  };
 
   const getInterpretation = (score: number) => {
     if (score <= 13) {
@@ -364,14 +389,19 @@ export const DepressionTest: React.FC<SingleTestProps> = ({
 
           <div className="flex justify-center pt-2">
             <button
-              onClick={() => onSaveResult(totalScore)}
+              onClick={handleSubmitResult}
               className="rounded-xl bg-teal-600 px-6 py-2.5 text-xs font-semibold text-white hover:bg-teal-500 transition-colors shadow-lg shadow-teal-950/50"
             >
               Save Result
             </button>
           </div>
+          {error && <div className="text-xs text-red-400 text-center">{error}</div>}
+          {result && (
+            <div className="text-xs text-slate-300 space-y-1 text-left">
+              <div>Результат успешно сохранен на сервере!</div>
+            </div>
+          )}
         </div>
       )}
-    </div>
-  );
-};
+        </div>
+      )}

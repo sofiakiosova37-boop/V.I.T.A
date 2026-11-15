@@ -1,14 +1,18 @@
 import React, { useState, useRef } from "react";
 import { SingleTestProps } from "./testContract";
+import { post } from "../../services/api";
 
 type GameState = "IDLE" | "WAITING" | "READY" | "RESULT" | "TOO_EARLY" | "FINAL";
 
-export const ReactionTest: React.FC<SingleTestProps> = ({ userId }) => {
+export const ReactionTest: React.FC<SingleTestProps> = ({ userId, onSaveResult}) => {
   const [gameState, setGameState] = useState<GameState>("IDLE");
   const [currentAttempt, setCurrentAttempt] = useState<number>(1);
   const [currentMs, setCurrentMs] = useState<number>(0);
   const [attempts, setAttempts] = useState<number[]>([]);
   
+  const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+
   const startTimeRef = useRef<number>(0);
   const timeoutRef = useRef<number | null>(null);
 
@@ -88,10 +92,21 @@ export const ReactionTest: React.FC<SingleTestProps> = ({ userId }) => {
   const evaluation = getReactionEvaluation(averageMs);
 
   const handleSubmitResult = async () => {
-    const { ok, status, data } = await post("/tests/reaction/submit", {
-      user_id: userId,
-      attempts,
-    });
+    try {
+      const { ok, status, data } = await post("/tests/reaction/submit", {
+        user_id: userId,
+        attempts,
+      });
+      if (!ok) {
+        setError(data.detail ?? "Не удалось сохранить результат.");
+        return;
+      }
+      setError(null);
+      setResult(data);
+      onSaveResult?.(data.avg_ms);
+    } catch {
+      setError("Нет связи с сервером. Запущен ли бэкенд?");
+    }
   };
 
   return (
@@ -194,6 +209,18 @@ export const ReactionTest: React.FC<SingleTestProps> = ({ userId }) => {
               Save Average Result ({averageMs} ms)
             </button>
           </div>
+          {error && <div className="text-xs text-red-400">{error}</div>}
+
+          {result && (
+            <div className="text-xs text-slate-300 space-y-1 text-left">
+              {result.baseline_ms && (
+                <div>Your usual reaction: {result.baseline_ms} ms</div>
+              )}
+              {result.tips.map((tip: string, i: number) => (
+                <div key={i}>• {tip}</div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

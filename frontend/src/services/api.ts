@@ -61,3 +61,34 @@ export async function updateProfileApi(
   if (!res.ok) throw new Error("Failed to update profile");
   return res.json();
 }
+
+//new
+const BACKEND_URL = "http://127.0.0.1:5000";
+
+async function parse(res: Response) {
+  try {
+    return await res.json();
+  } catch {
+    return {};
+  }
+}
+
+export async function post(path: string, body: unknown) {
+  const res = await fetch(`${BACKEND_URL}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return { ok: res.ok, status: res.status, data: await parse(res) };
+}
+
+export async function get(path: string) {
+  const res = await fetch(`${BACKEND_URL}${path}`);
+  return { ok: res.ok, status: res.status, data: await parse(res) };
+}
+
+export const registerUser = (email: string, password: string) =>
+  post("/register", { email, password });
+
+export const loginUser = (email: string, password: string) =>
+  post("/login", { email, password });
